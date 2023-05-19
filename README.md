@@ -5,19 +5,28 @@ Repository with directions, label, scripts, and information for mixtec labeling 
 
 # Load codex page into Segment-Anything Demo:
 
+![Select page](tutorial_images/1_select_page.png)
+
 # Add sufficient number of points (mask prompts) to segment figure
+![Add or remove areas to mask](tutorial_images/2_add_masks.png)
 
 # Cut-out segmented figure 
+![Cut-out figure](tutorial_images/3_cutout_figure.png)
 
-# Drag figure to folder to export
+# Drag figure to "cutouts" folder to export
+![Export figure](tutorial_images/4_drag_figure_cutouts.png)
 
 # Rename newly exported png figure according to this scheme:
+![Rename figure](tutorial_images/5_rename_figure.png)
 
 * "pageNumber-qualityIndicator-figureOnPageCount.png"
 
 	* Page numbers are relative to each codex and can be found in the file name for the given page. 
 
 	* Qualities range from a to c, and examples can be found below:
+		* A. ![](tutorial_images/a_example.png)
+		* B. ![](tutorial_images/b_example.png)
+		* C. ![](tutorial_images/c_example.png)
 
 	* The last two-digit number in the file name corresponds the order in which the figures are segmented. 
 
@@ -35,6 +44,4 @@ Repository with directions, label, scripts, and information for mixtec labeling 
 * Accordingly, the second animal, or non-human entity, encountered on the first page will be named (assuming "a" level quality):
 
 	* "001-a-b.png"
-
-# Move thie renamed png figure (or figures) to the "cutouts" folder of a given codex.
 
