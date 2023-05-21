@@ -3,20 +3,20 @@ Repository with directions, label, scripts, and information for mixtec labeling 
 
 ## Segmenting Workflow:
 
-# Load codex page into Segment-Anything Demo:
+### Load codex page into Segment-Anything Demo:
 
 ![Select page](tutorial_images/1_select_page.png)
 
-# Add sufficient number of points (mask prompts) to segment figure
+### Add sufficient number of points (mask prompts) to segment figure
 ![Add or remove areas to mask](tutorial_images/2_add_masks.png)
 
-# Cut-out segmented figure 
+### Cut-out segmented figure 
 ![Cut-out figure](tutorial_images/3_cutout_figure.png)
 
-# Drag figure to "cutouts" folder to export
+### Drag figure to "cutouts" folder to export
 ![Export figure](tutorial_images/4_drag_figure_cutouts.png)
 
-# Rename newly exported png figure according to this scheme:
+### Rename newly exported png figure according to this scheme:
 ![Rename figure](tutorial_images/5_rename_figure.png)
 
 * "pageNumber-qualityIndicator-figureOnPageCount.png"
