@@ -28,7 +28,7 @@ class NN(pl.LightningModule):
         self.accuracy = torchmetrics.Accuracy(task="binary", num_classes=num_classes)
         self.recall = torchmetrics.Recall(task="binary", num_classes=num_classes)
         self.f1_score = torchmetrics.F1Score(task="binary", num_classes=num_classes)
-        self.precision = torchmetrics.Precision(
+        self.prec = torchmetrics.Precision(
             task="binary", num_classes=num_classes
         )
 
@@ -49,7 +49,7 @@ class NN(pl.LightningModule):
 
         x = self.dropout2(x)
         x = self.fc1(x)
-        x = x.view(batch_size, -1)
+        x = x.view(input_size, -1)
         return x
 
     def training_step(self, batch, batch_idx):
@@ -78,7 +78,7 @@ class NN(pl.LightningModule):
         self.log_dict(
             {
                 "train_acc": self.accuracy(scores, y),
-                "train_pre": self.precision(scores, y),
+                "train_pre": self.prec(scores, y),
                 "train_rec": self.recall(scores, y),
                 "train_f1": self.f1_score(scores, y),
             },
