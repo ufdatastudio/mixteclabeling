@@ -49,7 +49,7 @@ class NN(pl.LightningModule):
 
         x = self.dropout2(x)
         x = self.fc1(x)
-        x = x.view(input_size, -1)
+        x = x.view(batch_size, -1)
         return x
 
     def training_step(self, batch, batch_idx):
