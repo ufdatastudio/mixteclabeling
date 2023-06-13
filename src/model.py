@@ -26,16 +26,14 @@ class NN(pl.LightningModule):
         self.dropout2 = nn.Dropout(0.5)
 
         self.accuracy = torchmetrics.Accuracy(task="binary", num_classes=num_classes)
+        self.recall = torchmetrics.Recall(task="binary", num_classes=num_classes)
+        self.f1_score = torchmetrics.F1Score(task="binary", num_classes=num_classes)
+        self.precision = torchmetrics.Precision(
+            task="binary", num_classes=num_classes
+        )
 
         self.loss_fn = nn.CrossEntropyLoss()
-        self.accuracy = torchmetrics.Accuracy(
-            task="multiclass", num_classes=num_classes
-        )
-        self.precision = torchmetrics.Precision(
-            task="multiclass", num_classes=num_classes
-        )
-        self.recall = torchmetrics.Recall(task="multiclass", num_classes=num_classes)
-        self.f1_score = torchmetrics.F1Score(task="multiclass", num_classes=num_classes)
+
 
     def forward(self, x):
         batch_size = x.size(0)

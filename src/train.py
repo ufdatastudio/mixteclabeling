@@ -58,11 +58,11 @@ def main(args):
 
     trainer.fit(model, dm)
     trainer.validate(model, dm)
-    trainer.test(model, dm)
+    #trainer.test(model, dm)
 
     # Run the test
 
 
 if __name__ == "__main__":
-    # Reach commanline stuff
+    # Read commanline stuff
     main(sys.argv[1:])
