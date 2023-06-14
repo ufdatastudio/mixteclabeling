@@ -6,15 +6,15 @@
 #SBATCH --mail-user=christan@ufl.edu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=16gb
+#SBATCH --mem=128gb
 #SBATCH --partition=gpu
-#SBATCH --gres=gpu:a100:1
+#SBATCH --gres=gpu:a100:2
 
 #module load ufrc
 module load pytorch
 #rm mixteclabeling.err mixteclabeling.out
 
-mamba install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+# mamba install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 
 pwd
 #cd /orange/ufdatastudios/christan/mixteclabeling/

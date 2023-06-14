@@ -11,7 +11,7 @@ import config
 import model
 
 from dataset import MixtecGenders
-from model import NN
+from model import NN, MixtecModel
 
 def _printdate(dt=datetime.datetime.now()):
     """print a date and time string containing only numbers and dashes"""
@@ -51,10 +51,11 @@ def main(args):
     dataset = MixtecGenders()
 
     # Configure the model
-    model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
+    # model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
+    model = MixtecModel(config.BATCH_SIZE, config.LEARNING_RATE)
 
     # Train the model
-    trainer = Trainer(devices="auto", accelerator="auto", gpus="auto", 
+    trainer = Trainer(devices="auto", accelerator="auto", 
                       logger=logger, log_every_n_steps=1, 
                       min_epochs=1, max_epochs=config.EPOCHS)
 

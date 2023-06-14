@@ -35,7 +35,7 @@ class MixtecGenders(pl.LightningDataModule):
             [
                 transforms.ToTensor(),
                 # AddRandomBlockNoise(),
-                transforms.Resize((227, 227), antialias=True),
+                transforms.Resize((224, 224), antialias=True),
                 # transforms.Grayscale(),
                 # transforms.ColorJitter(contrast=0.5),
                 # transforms.RandomRotation(360),     # Maybe useful for standng and sitting

@@ -9,8 +9,65 @@ import pytorch_lightning as pl
 import torchmetrics
 from torchmetrics import MetricCollection, Accuracy, Precision, Recall, F1Score
 import torchvision
+from torchvision.models import get_model, get_model_weights, get_weight, list_models
 
 import numpy as np
+
+
+class MixtecModel(pl.LightningModule):
+    def __init__(self, input_size, learning_rate, num_classes=2, model_name="vit_l_16"):
+        super().__init__()
+        self.save_hyperparameters()
+        self.lr = learning_rate
+
+        # Get models from here https://pytorch.org/vision/main/models.html
+        modeloptions = ['vit_h_14', 'regnet_y_128gf', 'vit_l_16', 'regnet_y_32gf', 'regnet_y_128gf']
+        # self.model = get_model(modeloptions[model_name], pretrained=True)
+        self.model = get_model(model_name, pretrained=False)
+
+        import inspect
+        print(inspect.getmembers(self.model))
+    
+    def forward(self, x):
+        return self.model(x)
+
+    # def training_step(self, batch, batch_idx):
+    #     return self.training_step(batch, batch_idx)
+
+    # def validation_step(self, batch, batch_idx):
+    #     return self.model.validation_step(batch, batch_idx)
+
+    # def test_step(self, batch, batch_idx):
+    #     return self.model.test_step(batch, batch_idx)
+
+    # def predict_step(self, batch, batch_idx):
+    #     return self.model.predict_step(batch, batch_idx)    
+
+
+    def configure_optimizers(self):
+        optimizer = optim.AdamW(self.parameters(), lr=self.lr)
+        lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100,150], gamma=0.1)
+        return [optimizer], [lr_scheduler]
+
+    def _calculate_loss(self, batch, mode="train"):
+        imgs, labels = batch
+        preds = self.model(imgs)
+        loss = F.cross_entropy(preds, labels)
+        acc = (preds.argmax(dim=-1) == labels).float().mean()
+
+        self.log(f'{mode}_loss', loss)
+        self.log(f'{mode}_acc', acc)
+        return loss
+
+    def training_step(self, batch, batch_idx):
+        loss = self._calculate_loss(batch, mode="train")
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        self._calculate_loss(batch, mode="val")
+
+    def test_step(self, batch, batch_idx):
+        self._calculate_loss(batch, mode="test")
 
 
 class NN(pl.LightningModule):
