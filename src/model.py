@@ -25,8 +25,8 @@ class MixtecModel(pl.LightningModule):
         # self.model = get_model(modeloptions[model_name], pretrained=True)
         self.model = get_model(model_name, pretrained=False)
 
-        import inspect
-        print(inspect.getmembers(self.model))
+        # import inspect
+        # print(inspect.getmembers(self.model))
     
     def forward(self, x):
         return self.model(x)
