@@ -48,18 +48,20 @@ def main(args):
     logger = TensorBoardLogger(save_dir=args.logsdir, name=args.run)
 
     # Get the data set
-    ds = MixtecGenders()
+    dataset = MixtecGenders()
 
     # Configure the model
     model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
 
     # Train the model
-    trainer = Trainer(devices="auto", accelerator="auto", logger=logger)
+    trainer = Trainer(devices="auto", accelerator="auto", gpus="auto", 
+                      logger=logger, log_every_n_steps=1, 
+                      min_epochs=1, max_epochs=config.EPOCHS)
 
     # Run the evaluation
 
-    trainer.fit(model, ds)
-    trainer.validate(model, ds)
+    trainer.fit(model, dataset)
+    trainer.validate(model, dataset)
     #trainer.test(model, dm)
 
     # Run the test
