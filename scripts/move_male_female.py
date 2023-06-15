@@ -2,24 +2,45 @@ import pandas as pd
 import os
 import shutil
 
+## Variable to sort
+column_name = 'gender'
+
 # Read the CSV file
-df = pd.read_csv("../data/mixtec_figures.csv")
+df_v = pd.read_csv("../data/CSVs/codex_vindobonensis.csv")
+
+df_n = pd.read_csv("../data/CSVs/codex_nuttall.csv")
+
+df_s = pd.read_csv("../data/CSVs/codex_selden.csv")
+
+df_list = []
+
+df_list.append(df_v)
+df_list.append(df_n)
+df_list.append(df_s)
 
 # Set the file locations
-fileOrigin = "../data/unlabeled_codices/codex_vindobonensis/cutouts/"
-fileDest = "../data/labeled_figures/codex_vindobonensis/seated/"
+fileOrigin = "../data/unlabeled_codices/"
+fileDest = "../data/labeled_figures/"
 
-# Iterate through the file names
-for ff in df['file_name'].tolist():
-    file_codex = df['codex'].loc[df['file_name'] == ff]
+file_seen_dict = {}
 
-    # Check if the value in the "codex" column is equal to "codex_nutall"
-    if str(file_codex.values[0]) == "codex_vindobonensis":
+# iterate through codices:
+for df_codex in df_list:
 
-        # Get the gender from the CSV file
-        folder = df['seated'].loc[df['file_name'] == ff].values[0]
-
+    # Iterate through the file names of particular codex
+    for ff in sorted(df_codex['file_name'].tolist()):
+        print(ff)
+    
+        # Get the codex from the CSV file
+        codex_folder = df_codex['codex'].loc[df_codex['file_name'] == ff].values[0]
+        
+        # Get the get the specific class from the CSV file
+        class_folder = df_codex[column_name].loc[df_codex['file_name'] == ff].values[0]
+    
         # Move the file to the destination folder
-        shutil.copy(fileOrigin + ff, fileDest + folder + "/")
+        shutil.copy(fileOrigin + codex_folder + "/" + "cutouts/" + ff, 
+        fileDest + codex_folder + "/" + column_name + "/" + class_folder + "/")
+        
+        
 
 print("Files have been copied successfully!")
