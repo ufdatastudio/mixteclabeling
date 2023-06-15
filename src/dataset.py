@@ -7,11 +7,12 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
 import pytorch_lightning as pl
+import torch.multiprocessing as mp
 
 from torch.utils.data import ConcatDataset, random_split
 
 class MixtecGenders(pl.LightningDataModule):
-    def __init__(self, data_dir=None, batch_size=125, num_workers=None):
+    def __init__(self, data_dir=None, batch_size=125, num_workers=mp.cpu_count()):
         super().__init__()
         self.batch_size = batch_size
         self.num_workers = num_workers if num_workers is not None else "auto"

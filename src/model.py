@@ -23,7 +23,7 @@ class MixtecModel(pl.LightningModule):
         # Get models from here https://pytorch.org/vision/main/models.html
         modeloptions = ['vit_h_14', 'regnet_y_128gf', 'vit_l_16', 'regnet_y_32gf', 'regnet_y_128gf']
         # self.model = get_model(modeloptions[model_name], pretrained=True)
-        self.model = get_model(model_name, pretrained=False)
+        self.model = get_model(model_name)
 
         import inspect
         print(inspect.getmembers(self.model))
@@ -55,8 +55,8 @@ class MixtecModel(pl.LightningModule):
         loss = F.cross_entropy(preds, labels)
         acc = (preds.argmax(dim=-1) == labels).float().mean()
 
-        self.log(f'{mode}_loss', loss)
-        self.log(f'{mode}_acc', acc)
+        self.log(f'{mode}_loss', loss, sync_dist=True)
+        self.log(f'{mode}_acc', acc, sync_dist=True)
         return loss
 
     def training_step(self, batch, batch_idx):
@@ -132,13 +132,14 @@ class NN(pl.LightningModule):
             on_step=True,
             on_epoch=False,
             prog_bar=True,
+            sync_dist=True
         )
 
         if batch_idx % 10 == 0:
             x = x[:8]
             # grid = torchvision.utils.make_grid(x.view(-1, 1, 28, 28))
             grid = torchvision.utils.make_grid(x)
-            self.logger.experiment.add_image("mixtec_images", grid, self.global_step)
+            self.logger.experiment.add_image("mixtec_images", grid, self.global_step, sync_dist=True)
 
         return {"loss": loss, "scores": scores, "y": y}
 
@@ -160,13 +161,14 @@ class NN(pl.LightningModule):
             on_step=False,
             on_epoch=True,
             # prog_bar=True,
+            sync_dist=True
         )
         return loss
 
 
     def test_step(self, batch, batch_idx):
         loss, scores, y = self._common_step(batch, batch_idx)
-        self.log("test_loss", loss)
+        self.log("test_loss", loss, sync_dist=True)
         return loss
 
 
