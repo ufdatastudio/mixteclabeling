@@ -56,14 +56,17 @@ class MixtecGenders(pl.LightningDataModule):
         )
 
         self.train_set, self.val_set, self.test_set = random_split(
-            self.figures_dataset, [0.6, 0.2, 0.2]
+            self.figures_dataset, [0.6, 0.3, 0.1]
         )
 
     def train_dataloader(self):
         return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True)
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=True)
 
     def test_dataloader(self):
-        return DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(self.test_set, batch_size=self.batch_size, shuffle=True)
+
+    def predict_dataloader(self):
+        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=True)

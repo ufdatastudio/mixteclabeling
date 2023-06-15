@@ -7,6 +7,10 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning import Trainer
 
+from pytorch_lightning import seed_everything
+from pytorch_lightning.callbacks import BatchSizeFinder, EarlyStopping, LearningRateFinder
+from pytorch_lightning import Trainer
+
 import config
 import model
 
@@ -44,25 +48,45 @@ def main(args):
     args = parser.parse_args(args)
 
     # Deep Learning stuff ---------------
+    seed_everything(42, workers=True)
+
     # Set up logging
     logger = TensorBoardLogger(save_dir=args.logsdir, name=args.run)
+    # Print log directory
+    print(f"Logging to {logger.log_dir}")
 
     # Get the data set
-    dataset = MixtecGenders()
+    dataset = MixtecGenders(num_workers=1)
 
     # Configure the model
     # model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
     model = MixtecModel(config.BATCH_SIZE, config.LEARNING_RATE)
 
     # Train the model
-    trainer = Trainer(devices="auto", accelerator="auto", 
+    early_stopping = EarlyStopping(
+        monitor="train_f1",
+        stopping_threshold=1e-4,
+        # divergence_threshold=9.0,
+        check_finite=True,
+    )
+
+    trainer = Trainer(devices="auto", accelerator="auto", #auto_lr_find=True,
                       logger=logger, log_every_n_steps=1, 
-                      min_epochs=1, max_epochs=config.EPOCHS)
+                      min_epochs=1, max_epochs=config.EPOCHS,
+                      callbacks=[
+                        #   BatchSizeFinder(init_val=64),
+                        # LearningRateFinder(),
+                        early_stopping
+                          ])
+
+    # Tune the model
+    # trainer.tune(model, datamodule=dataset)
+
 
     # Run the evaluation
 
-    trainer.fit(model, dataset)
-    trainer.validate(model, dataset)
+    trainer.fit(model, datamodule=dataset)
+    trainer.validate(model, datamodule=dataset)
     #trainer.test(model, dm)
 
     # Run the test

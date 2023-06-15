@@ -19,60 +19,94 @@ class MixtecModel(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
         self.lr = learning_rate
+        self.loss_fn = nn.CrossEntropyLoss()
+        #self.loss_fn = nn.NLLLoss()
 
         # Get models from here https://pytorch.org/vision/main/models.html
         modeloptions = ['vit_h_14', 'regnet_y_128gf', 'vit_l_16', 'regnet_y_32gf', 'regnet_y_128gf']
         # self.model = get_model(modeloptions[model_name], pretrained=True)
         self.model = get_model(model_name)
 
-        # import inspect
-        # print(inspect.getmembers(self.model))
+        # Set up metrics
+        metrics = MetricCollection(
+            {
+                "acc": Accuracy(task="binary", num_classes=num_classes),
+                "rec": Recall(task="binary", num_classes=num_classes),
+                "f1": F1Score(task="binary", num_classes=num_classes),
+                "prec": Precision(task="binary", num_classes=num_classes),
+            }
+        )
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
     
     def forward(self, x):
         return self.model(x)
 
-    # def training_step(self, batch, batch_idx):
-    #     return self.training_step(batch, batch_idx)
-
-    # def validation_step(self, batch, batch_idx):
-    #     return self.model.validation_step(batch, batch_idx)
-
-    # def test_step(self, batch, batch_idx):
-    #     return self.model.test_step(batch, batch_idx)
-
-    # def predict_step(self, batch, batch_idx):
-    #     return self.model.predict_step(batch, batch_idx)    
-
-
-    def configure_optimizers(self):
-        optimizer = optim.AdamW(self.parameters(), lr=self.lr)
-        lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100,150], gamma=0.1)
-        return [optimizer], [lr_scheduler]
-
-    def _calculate_loss(self, batch, mode="train"):
-        imgs, labels = batch
-        preds = self.model(imgs)
-        loss = F.cross_entropy(preds, labels)
-        acc = (preds.argmax(dim=-1) == labels).float().mean()
-
-        self.log(f'{mode}_loss', loss, sync_dist=True)
-        self.log(f'{mode}_acc', acc, sync_dist=True)
-        return loss
+    def _common_step(self, batch, mode="train"):
+        X, y = batch
+        scores = self.forward(X)
+        loss = self.loss_fn(scores, y)
+        return loss, scores, y
 
     def training_step(self, batch, batch_idx):
-        loss = self._calculate_loss(batch, mode="train")
-        return loss
+        loss, scores, y = self._common_step(batch, mode="train")
+        preds = torch.argmax(scores, dim=1)
+
+        self.train_metrics.update(preds, y)
+        # print(f"train: {self.train_metrics.compute()}")
+        self.log_dict(
+            self.train_metrics,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+            add_dataloader_idx=True
+        )
+        return {"loss": loss, "scores": scores, "y": y}
 
     def validation_step(self, batch, batch_idx):
-        self._calculate_loss(batch, mode="val")
+        loss, scores, y = self._common_step(batch, mode="val")
+        preds = torch.argmax(scores, dim=1)
+        self.val_metrics.update(preds, y)
+        # print(f"val: {self.val_metrics.compute()}")
+        self.log_dict(
+            self.val_metrics,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+            add_dataloader_idx=True
+        )
+        return loss
 
     def test_step(self, batch, batch_idx):
-        self._calculate_loss(batch, mode="test")
+        loss, scores, y = self._common_step(batch, mode="test")
+        preds = torch.argmax(scores, dim=1)
+        self.test_metrics.update(preds, y)
+        # print(f"test: {self.test_metrics.compute()}")
+        self.log_dict(
+            self.test_metrics,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+            add_dataloader_idx=True
+        )
+        return loss
+    
+    def configure_optimizers(self):
+        optimizer = optim.AdamW(self.parameters(), lr=self.lr)
+        # lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100,150], gamma=0.1)
+        # return [optimizer], [lr_scheduler]
+        return optimizer
+        
 
 
 class NN(pl.LightningModule):
     def __init__(self, input_size, learning_rate, num_classes=2):
         super().__init__()
+        self.save_hyperparameters()
 
         self.lr = learning_rate
 
@@ -90,7 +124,7 @@ class NN(pl.LightningModule):
         self.final = nn.Linear(1568, 1)
 
         # Set up metrics
-        self.metrics = MetricCollection(
+        metrics = MetricCollection(
             {
                 "acc": Accuracy(task="binary", num_classes=num_classes),
                 "rec": Recall(task="binary", num_classes=num_classes),
@@ -98,6 +132,9 @@ class NN(pl.LightningModule):
                 "prec": Precision(task="binary", num_classes=num_classes),
             }
         )
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
     def forward(self, x):
         batch_size = x.size(0)
@@ -125,10 +162,10 @@ class NN(pl.LightningModule):
         loss, scores, y = self._common_step(batch, batch_idx)
 
         preds = torch.argmax(scores, dim=1)
-        self.metrics.update(preds, y)
+        self.train_metrics.update(preds, y)
 
         self.log_dict(
-            self.metrics,
+            self.train_metrics,
             on_step=True,
             on_epoch=False,
             prog_bar=True,
@@ -155,9 +192,9 @@ class NN(pl.LightningModule):
         loss, scores, y = self._common_step(batch, batch_idx)
         # self.log("val_loss", loss)
         preds = torch.argmax(scores, dim=1)
-        self.metrics.update(preds, y)
+        self.val_metrics.update(preds, y)
         self.log_dict(
-            self.metrics,
+            self.val_metrics,
             on_step=False,
             on_epoch=True,
             # prog_bar=True,
@@ -168,7 +205,15 @@ class NN(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         loss, scores, y = self._common_step(batch, batch_idx)
-        self.log("test_loss", loss, sync_dist=True)
+        preds = torch.argmax(scores, dim=1)
+        self.test_metrics.update(preds, y)
+        self.log_dict(
+            self.test_metrics,
+            on_step=False,
+            on_epoch=True,
+            # prog_bar=True,
+            sync_dist=True
+        )
         return loss
 
 
