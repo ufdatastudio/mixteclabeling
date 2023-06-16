@@ -34,6 +34,19 @@ def _printdate(dt=datetime.datetime.now()):
     d = "{}-{}-{}-{}-{}".format(str(dt.month), str(dt.day), str(dt.year), hour, minute)
     return d
 
+class LoggingCallback(pl.Callback):
+    def on_validation_end(self, trainer, pl_module):
+        metrics = trainer.callback_metrics
+        pl_module.logger.log_metrics(metrics, step=trainer.global_step)
+        for k, v in metrics.items():
+            # print(f">>>{k}: {v}")
+            # print(f">>>>{dir(pl_module)}")
+            # print(f">>>>>{dir(pl_module.logger)}")
+            # print(f">>>>>>{dir(pl_module.logger.experiment)}")
+            pl_module.logger.log_metrics({k: v}, step=trainer.global_step)
+            pl_module.logger.experiment.add_scalar(k, v, trainer.global_step)
+            #({k: v}, trainer.global_step)
+
 
 def main(args):
     # Config stuff --------------------
@@ -59,13 +72,14 @@ def main(args):
     dataset = MixtecGenders(num_workers=1)
 
     # Configure the model
-    # model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
-    model = MixtecModel(config.BATCH_SIZE, config.LEARNING_RATE)
+    model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
+    # model = MixtecModel(config.BATCH_SIZE, config.LEARNING_RATE)
 
     # Train the model
     early_stopping = EarlyStopping(
-        monitor="train_f1",
-        stopping_threshold=1e-4,
+        monitor="val_f1",
+        min_delta=1e-4,
+        # stopping_threshold=1e-4,
         # divergence_threshold=9.0,
         check_finite=True,
     )
@@ -76,7 +90,8 @@ def main(args):
                       callbacks=[
                         #   BatchSizeFinder(init_val=64),
                         # LearningRateFinder(),
-                        early_stopping
+                        early_stopping,
+                        LoggingCallback(),
                           ])
 
     # Tune the model
@@ -86,7 +101,9 @@ def main(args):
     # Run the evaluation
 
     trainer.fit(model, datamodule=dataset)
-    trainer.validate(model, datamodule=dataset)
+    print(trainer.validate(model, datamodule=dataset))
+    print('-'*80)
+    print(trainer.predict(model, datamodule=dataset))
     #trainer.test(model, dm)
 
     # Run the test

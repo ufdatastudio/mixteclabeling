@@ -18,7 +18,7 @@ class MixtecModel(pl.LightningModule):
     def __init__(self, input_size, learning_rate, num_classes=2, model_name="vit_l_16"):
         super().__init__()
         self.save_hyperparameters()
-        self.lr = learning_rate
+        self.learning_rate = learning_rate
         self.loss_fn = nn.CrossEntropyLoss()
         #self.loss_fn = nn.NLLLoss()
 
@@ -96,7 +96,7 @@ class MixtecModel(pl.LightningModule):
         return loss
     
     def configure_optimizers(self):
-        optimizer = optim.AdamW(self.parameters(), lr=self.lr)
+        optimizer = optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
         # lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100,150], gamma=0.1)
         # return [optimizer], [lr_scheduler]
         return optimizer
@@ -108,7 +108,7 @@ class NN(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
 
-        self.lr = learning_rate
+        # self.lr = learning_rate
 
         # self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1,1]))
         self.loss_fn = nn.NLLLoss()
@@ -138,7 +138,6 @@ class NN(pl.LightningModule):
 
     def forward(self, x):
         batch_size = x.size(0)
-        print(f"The current shape is {x.shape}")
         # x = np.expand_dims (x, axis=1)
         # x = x.unsqueeze(1) # Fix for the 4D-3D problem () # https://stackoverflow.com/questions/57237381/runtimeerror-expected-4-dimensional-input-for-4-dimensional-weight-32-3-3-but
         x = self.conv1(x)
@@ -167,7 +166,7 @@ class NN(pl.LightningModule):
         self.log_dict(
             self.train_metrics,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
             prog_bar=True,
             sync_dist=True
         )
@@ -176,11 +175,13 @@ class NN(pl.LightningModule):
             x = x[:8]
             # grid = torchvision.utils.make_grid(x.view(-1, 1, 28, 28))
             grid = torchvision.utils.make_grid(x)
-            self.logger.experiment.add_image("mixtec_images", grid, self.global_step, sync_dist=True)
+            self.logger.experiment.add_image("mixtec_images", grid, self.global_step)
 
         return {"loss": loss, "scores": scores, "y": y}
 
-
+    def on_training_epoch_end(self, outputs):
+        self.train_metrics.reset()
+    
     def _common_step(self, batch, batch_idx):
         x, y = batch
         # x = x.reshape(x.size(0), -1)
@@ -195,12 +196,18 @@ class NN(pl.LightningModule):
         self.val_metrics.update(preds, y)
         self.log_dict(
             self.val_metrics,
-            on_step=False,
+            on_step=True,
             on_epoch=True,
-            # prog_bar=True,
+            prog_bar=True,
             sync_dist=True
         )
         return loss
+    
+        
+    # def validation_epoch_end(self, outputs):
+    #     self.log('valid_acc_epoch', self.val_metrics.compute())
+    #     self.val_metrics.reset()
+
 
 
     def test_step(self, batch, batch_idx):
@@ -209,9 +216,9 @@ class NN(pl.LightningModule):
         self.test_metrics.update(preds, y)
         self.log_dict(
             self.test_metrics,
-            on_step=False,
+            on_step=True,
             on_epoch=True,
-            # prog_bar=True,
+            prog_bar=True,
             sync_dist=True
         )
         return loss
@@ -224,4 +231,4 @@ class NN(pl.LightningModule):
         
 
     def configure_optimizers(self):
-        return optim.Adam(self.parameters(), lr=self.lr)
+        return optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
