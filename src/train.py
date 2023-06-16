@@ -1,6 +1,7 @@
 import argparse
 from collections import Counter
 import datetime
+import os
 import sys
 
 import torch
@@ -16,7 +17,7 @@ import config
 import model
 
 from dataset import MixtecGenders
-from model import NN, MixtecModel
+from model import MixtecModel
 
 def _printdate(dt=datetime.datetime.now()):
     """print a date and time string containing only numbers and dashes"""
@@ -67,16 +68,19 @@ def main(args):
     # Set up logging
     logger = TensorBoardLogger(save_dir=args.logsdir, name=args.run)
     # Print log directory
-    print(f"Logging to {logger.log_dir}")
+    print(f">>> # Logging to {logger.log_dir}")
 
+    num_workers = len(os.sched_getaffinity(0))
+    print(f">>> # Using {num_workers} workers")
     # Get the data set
-    dataset = MixtecGenders(num_workers="auto")
+    # Using only one worker is faster
+    dataset = MixtecGenders(num_workers=1, batch_size=config.BATCH_SIZE)
 
     #print(dict(Counter(dataset.targets)))
 
     # Configure the model
     #model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
-    model = MixtecModel(config.BATCH_SIZE, config.LEARNING_RATE)
+    model = MixtecModel(config.LEARNING_RATE)
 
     # Train the model
     early_stopping = EarlyStopping(
@@ -104,7 +108,7 @@ def main(args):
     # Run the evaluation
 
     trainer.fit(model, datamodule=dataset)
-    # print(trainer.validate(model, datamodule=dataset))
+    trainer.validate(model, datamodule=dataset)
     # print('-'*80)
     #print(trainer.predict(model, datamodule=dataset))
     #trainer.test(model, dm)

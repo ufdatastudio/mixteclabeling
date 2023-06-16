@@ -13,10 +13,10 @@ import torch.multiprocessing as mp
 from torch.utils.data import ConcatDataset, random_split
 
 class MixtecGenders(pl.LightningDataModule):
-    def __init__(self, data_dir=None, batch_size=125, num_workers=mp.cpu_count()):
+    def __init__(self, data_dir=None, batch_size=125, num_workers=8):
         super().__init__()
         self.batch_size = batch_size
-        self.num_workers = num_workers if num_workers is not None else "auto"
+        self.num_workers = num_workers
 
         if data_dir is None:
             self.basepath = Path(
@@ -65,13 +65,13 @@ class MixtecGenders(pl.LightningDataModule):
         print(dict(Counter(vindobonensis_dataset.targets)))
 
     def train_dataloader(self):
-        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
 
     def test_dataloader(self):
-        return DataLoader(self.test_set, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.test_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
 
     def predict_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
