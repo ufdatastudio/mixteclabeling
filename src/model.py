@@ -16,7 +16,7 @@ import numpy as np
 
 
 class MixtecModel(pl.LightningModule):
-    def __init__(self, input_size, learning_rate, num_classes=2, model_name="vit_l_16"):
+    def __init__(self, input_size, learning_rate, num_classes=2, model_name="resnet18"):
         super().__init__()
         self.save_hyperparameters()
         self.learning_rate = learning_rate
@@ -27,9 +27,12 @@ class MixtecModel(pl.LightningModule):
         self.reference_label = None
 
         # Get models from here https://pytorch.org/vision/main/models.html
-        modeloptions = ['vit_h_14', 'regnet_y_128gf', 'vit_l_16', 'regnet_y_32gf', 'regnet_y_128gf']
+        modeloptions = ['vit_h_14', 'regnet_y_128gf', 'vit_l_16', 'regnet_y_32gf', 'regnet_y_128gf', 'resnet18']
         # self.model = get_model(modeloptions[model_name], pretrained=True)
         self.model = get_model(model_name)
+        # FIXME update the last layer for all models
+        if model_name == "resnet18":
+            self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
 
         # Set up metrics
         metrics = MetricCollection(
@@ -43,6 +46,9 @@ class MixtecModel(pl.LightningModule):
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
+
+        self.reference_image = None
+        self.reference_label = None
     
     def forward(self, x):
         return self.model(x)
@@ -67,6 +73,26 @@ class MixtecModel(pl.LightningModule):
             sync_dist=True,
             add_dataloader_idx=True
         )
+
+        if batch_idx == 0 and self.reference_image is None:
+            self.reference_image = batch[0][2]
+            self.reference_label = y[2]
+        
+        self.showActivations(img=self.reference_image,
+                        layername="conv1",
+                        layer=self.model.conv1,
+                        weight=self.model.conv1.weight)
+        
+        # self.showActivations(self.reference_image, layername="layer1", layer=self.model.layer1[0].conv1, weight=self.model.layer1[0].conv1.weight)
+        
+        # self.showActivations(self.reference_image, layername="layer2", layer=self.model.layer2[0].conv1, weight=self.model.layer2[0].conv1.weight)
+        
+        # self.showActivations(self.reference_image, layername="layer3", layer=self.model.layer3[0].conv1, weight=self.model.layer3[0].conv1.weight)
+        
+        # self.showActivations(self.reference_image, layername="layer4", layer=self.model.layer4[0], weight=self.model.layer4[0].conv1.weight)
+
+
+
         return {"loss": loss, "scores": scores, "y": y}
 
     def validation_step(self, batch, batch_idx):
@@ -104,6 +130,33 @@ class MixtecModel(pl.LightningModule):
         # lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100,150], gamma=0.1)
         # return [optimizer], [lr_scheduler]
         return optimizer
+
+
+    def showActivations(self,
+                        img,
+                        layername,
+                        layer,
+                        weight):
+        """
+        Usage:
+            self.showActivations(img=self.reference_image, layername="conv1", layer=self.model.conv1, weight=self.model.conv1.weight)
+        """
+        if self.reference_image is None:
+            print(">>>No reference image found")
+            return
+
+        # logging layer 1 activations
+        layer1 = layer
+        weight1 = weight
+
+        output1 = layer1(img)
+
+        output1 = output1.squeeze(0)
+        gray_scale1 = torch.sum(output1, dim=0)
+        gray_scale1 = gray_scale1 / output1.shape[0]
+
+        self.logger.experiment.add_image(layername, gray_scale1,
+                                         self.current_epoch, dataformats="HW")
         
 
 
@@ -140,51 +193,47 @@ class NN(pl.LightningModule):
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
+        self.reference_image = None
+        self.reference_label = None
 
-    def makegrid(self, output,numrows):
-        outer=(torch.Tensor.cpu(output).detach())
-        plt.figure(figsize=(20,5))
-        b=np.array([]).reshape(0,outer.shape[2])
-        c=np.array([]).reshape(numrows*outer.shape[2],0)
-        i=0
-        j=0
-        while(i < outer.shape[1]):
-            img=outer[0][i]
-            b=np.concatenate((img,b),axis=0)
-            j+=1
-            if(j==numrows):
-                c=np.concatenate((c,b),axis=1)
-                b=np.array([]).reshape(0,outer.shape[2])
-                j=0
-                 
-            i+=1
-        return c
 
     def showActivations(self,x):
-            # logging reference image
-            #print(x.shape)
-            #print(torch.Tensor.cpu(x[0][0]).shape)
-            #x = transforms.Grayscale()(x)
+        if self.reference_image is None:
+            print(">>>No reference image found")
+            return
 
-            #print(x.shape)
-            #self.logger.experiment.add_image("input",torch.Tensor.cpu(x[0][0]),self.current_epoch,dataformats="HW")
- 
-            print("<<<<<< reached showActivations >>>>>>")
+        # logging layer 1 activations        
+        layer1 = self.conv1
+        weight1 = self.conv1.weight
 
-            # logging layer 1 activations        
-            out = self.fc1(x)
-            c=self.makegrid(out,4)
-            self.logger.experiment.add_image("layer 1",c,self.current_epoch,dataformats="HW")
-             
-            # logging layer 2 activations        
-            # out = self.conv2(out)
-            # c=self.makegrid(out,8)
-            # self.logger.experiment.add_image("layer 2",c,self.current_epoch,dataformats="HW")
+        output1 = layer1(self.reference_image)
+
+        output1 = output1.squeeze(0)
+        gray_scale1 = torch.sum(output1, dim=0)
+        gray_scale1 = gray_scale1 / output1.shape[0]
+
+        self.logger.experiment.add_image("conv1", gray_scale1,
+                                         self.current_epoch, dataformats="HW")
+
+        # logging layer 2 activations
+        # layer2 = self.conv2
+        # weight2 = self.conv2.weight
+
+        # output2 = layer2(self.reference_image)
+        # print(f"output1.shape: {output2.shape}")
+
+        # output2 = output2.squeeze(0)
+        # gray_scale2 = torch.sum(output2, dim=0)
+        # gray_scale2 = gray_scale2 / output2.shape[0]
+
+        # print(f"gray_scale.shape: {gray_scale2.shape}")
+
+        # self.logger.experiment.add_image("conv2", gray_scale2,
+        #                                  self.current_epoch, dataformats="HW")
+
 
     def forward(self, x):
         batch_size = x.size(0)
-        # x = np.expand_dims (x, axis=1)
-        # x = x.unsqueeze(1) # Fix for the 4D-3D problem () # https://stackoverflow.com/questions/57237381/runtimeerror-expected-4-dimensional-input-for-4-dimensional-weight-32-3-3-but
         x = self.conv1(x)
         x = F.relu(x)
 
@@ -205,9 +254,9 @@ class NN(pl.LightningModule):
         x, y = batch
         loss, scores, y = self._common_step(batch, batch_idx)
 
-        if batch_idx == 0:
-            self.reference_image = x[0]
-            self.reference_label = y[0]
+        if batch_idx == 0 and self.reference_image is None:
+            self.reference_image = x[2]
+            self.reference_label = y[2]
 
         preds = torch.argmax(scores, dim=1)
         self.train_metrics.update(preds, y)
@@ -220,13 +269,14 @@ class NN(pl.LightningModule):
             sync_dist=True
         )
 
+        self.showActivations(self.reference_image)
         if batch_idx % 10 == 0:
             x = x[:8]
             # grid = torchvision.utils.make_grid(x.view(-1, 1, 28, 28))
             grid = torchvision.utils.make_grid(x)
             self.logger.experiment.add_image("mixtec_images", grid, self.global_step)
             print("<<<<< reached on_training_epoch_end >>>>>")
-            self.showActivations(self.reference_image)
+           
 
         return {"loss": loss, "scores": scores, "y": y}
 

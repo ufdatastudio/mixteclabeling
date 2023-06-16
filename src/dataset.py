@@ -39,8 +39,8 @@ class MixtecGenders(pl.LightningDataModule):
                 # AddRandomBlockNoise(),
                 transforms.Resize((224, 224), antialias=True),
                 # transforms.Grayscale(),
-                transforms.ColorJitter(contrast=0.5),
-                transforms.RandomRotation(360),     # Maybe useful for standng and sitting
+                # transforms.ColorJitter(contrast=0.5),
+                # transforms.RandomRotation(360),     # Maybe useful for standng and sitting
                 # transforms.RandomHorizontalFlip(50),
                 # transforms.RandomVerticalFlip(50)
             ]

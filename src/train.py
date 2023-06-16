@@ -70,31 +70,31 @@ def main(args):
     print(f"Logging to {logger.log_dir}")
 
     # Get the data set
-    dataset = MixtecGenders(num_workers=1)
+    dataset = MixtecGenders(num_workers="auto")
 
     #print(dict(Counter(dataset.targets)))
 
     # Configure the model
-    model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
-    # model = MixtecModel(config.BATCH_SIZE, config.LEARNING_RATE)
+    #model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
+    model = MixtecModel(config.BATCH_SIZE, config.LEARNING_RATE)
 
     # Train the model
     early_stopping = EarlyStopping(
         monitor="val_f1",
-        min_delta=1e-4,
-        # stopping_threshold=1e-4,
+        # min_delta=1e-6,
+        stopping_threshold=1e-4,
         # divergence_threshold=9.0,
         check_finite=True,
     )
 
     trainer = Trainer(devices="auto", accelerator="auto", #auto_lr_find=True,
-                      logger=logger, log_every_n_steps=1, 
+                      logger=logger, log_every_n_steps=1, enable_progress_bar=True,
                       min_epochs=1, max_epochs=config.EPOCHS,
                       callbacks=[
                         #   BatchSizeFinder(init_val=64),
                         # LearningRateFinder(),
-                        early_stopping,
-                        LoggingCallback(),
+                        #early_stopping,
+                        # LoggingCallback(),
                           ])
 
     # Tune the model
@@ -104,8 +104,8 @@ def main(args):
     # Run the evaluation
 
     trainer.fit(model, datamodule=dataset)
-    print(trainer.validate(model, datamodule=dataset))
-    print('-'*80)
+    # print(trainer.validate(model, datamodule=dataset))
+    # print('-'*80)
     #print(trainer.predict(model, datamodule=dataset))
     #trainer.test(model, dm)
 
