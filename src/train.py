@@ -1,4 +1,5 @@
 import argparse
+from collections import Counter
 import datetime
 import sys
 
@@ -71,6 +72,8 @@ def main(args):
     # Get the data set
     dataset = MixtecGenders(num_workers=1)
 
+    #print(dict(Counter(dataset.targets)))
+
     # Configure the model
     model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
     # model = MixtecModel(config.BATCH_SIZE, config.LEARNING_RATE)
@@ -103,7 +106,7 @@ def main(args):
     trainer.fit(model, datamodule=dataset)
     print(trainer.validate(model, datamodule=dataset))
     print('-'*80)
-    print(trainer.predict(model, datamodule=dataset))
+    #print(trainer.predict(model, datamodule=dataset))
     #trainer.test(model, dm)
 
     # Run the test

@@ -1,3 +1,4 @@
+from collections import Counter
 import datetime
 import getpass
 import os
@@ -51,6 +52,8 @@ class MixtecGenders(pl.LightningDataModule):
         nuttall_dataset = datasets.ImageFolder(self.path_n, transform=transform)
         selden_dataset = datasets.ImageFolder(self.path_s, transform=transform)
 
+
+
         self.figures_dataset = ConcatDataset(
             [vindobonensis_dataset, nuttall_dataset, selden_dataset]
         )
@@ -58,6 +61,8 @@ class MixtecGenders(pl.LightningDataModule):
         self.train_set, self.val_set, self.test_set = random_split(
             self.figures_dataset, [0.6, 0.3, 0.1]
         )
+
+        print(dict(Counter(vindobonensis_dataset.targets)))
 
     def train_dataloader(self):
         return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True)

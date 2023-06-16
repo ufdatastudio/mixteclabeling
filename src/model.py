@@ -10,6 +10,7 @@ import torchmetrics
 from torchmetrics import MetricCollection, Accuracy, Precision, Recall, F1Score
 import torchvision
 from torchvision.models import get_model, get_model_weights, get_weight, list_models
+import matplotlib.pyplot as plt 
 
 import numpy as np
 
@@ -21,6 +22,9 @@ class MixtecModel(pl.LightningModule):
         self.learning_rate = learning_rate
         self.loss_fn = nn.CrossEntropyLoss()
         #self.loss_fn = nn.NLLLoss()
+
+        self.reference_image = None
+        self.reference_label = None
 
         # Get models from here https://pytorch.org/vision/main/models.html
         modeloptions = ['vit_h_14', 'regnet_y_128gf', 'vit_l_16', 'regnet_y_32gf', 'regnet_y_128gf']
@@ -59,7 +63,7 @@ class MixtecModel(pl.LightningModule):
             self.train_metrics,
             on_step=True,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True,
             add_dataloader_idx=True
         )
@@ -74,7 +78,7 @@ class MixtecModel(pl.LightningModule):
             self.val_metrics,
             on_step=True,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True,
             add_dataloader_idx=True
         )
@@ -136,6 +140,47 @@ class NN(pl.LightningModule):
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
+
+    def makegrid(self, output,numrows):
+        outer=(torch.Tensor.cpu(output).detach())
+        plt.figure(figsize=(20,5))
+        b=np.array([]).reshape(0,outer.shape[2])
+        c=np.array([]).reshape(numrows*outer.shape[2],0)
+        i=0
+        j=0
+        while(i < outer.shape[1]):
+            img=outer[0][i]
+            b=np.concatenate((img,b),axis=0)
+            j+=1
+            if(j==numrows):
+                c=np.concatenate((c,b),axis=1)
+                b=np.array([]).reshape(0,outer.shape[2])
+                j=0
+                 
+            i+=1
+        return c
+
+    def showActivations(self,x):
+            # logging reference image
+            #print(x.shape)
+            #print(torch.Tensor.cpu(x[0][0]).shape)
+            #x = transforms.Grayscale()(x)
+
+            #print(x.shape)
+            #self.logger.experiment.add_image("input",torch.Tensor.cpu(x[0][0]),self.current_epoch,dataformats="HW")
+ 
+            print("<<<<<< reached showActivations >>>>>>")
+
+            # logging layer 1 activations        
+            out = self.fc1(x)
+            c=self.makegrid(out,4)
+            self.logger.experiment.add_image("layer 1",c,self.current_epoch,dataformats="HW")
+             
+            # logging layer 2 activations        
+            # out = self.conv2(out)
+            # c=self.makegrid(out,8)
+            # self.logger.experiment.add_image("layer 2",c,self.current_epoch,dataformats="HW")
+
     def forward(self, x):
         batch_size = x.size(0)
         # x = np.expand_dims (x, axis=1)
@@ -160,6 +205,10 @@ class NN(pl.LightningModule):
         x, y = batch
         loss, scores, y = self._common_step(batch, batch_idx)
 
+        if batch_idx == 0:
+            self.reference_image = x[0]
+            self.reference_label = y[0]
+
         preds = torch.argmax(scores, dim=1)
         self.train_metrics.update(preds, y)
 
@@ -167,7 +216,7 @@ class NN(pl.LightningModule):
             self.train_metrics,
             on_step=True,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True
         )
 
@@ -176,6 +225,8 @@ class NN(pl.LightningModule):
             # grid = torchvision.utils.make_grid(x.view(-1, 1, 28, 28))
             grid = torchvision.utils.make_grid(x)
             self.logger.experiment.add_image("mixtec_images", grid, self.global_step)
+            print("<<<<< reached on_training_epoch_end >>>>>")
+            self.showActivations(self.reference_image)
 
         return {"loss": loss, "scores": scores, "y": y}
 
@@ -198,7 +249,7 @@ class NN(pl.LightningModule):
             self.val_metrics,
             on_step=True,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True
         )
         return loss
@@ -218,7 +269,7 @@ class NN(pl.LightningModule):
             self.test_metrics,
             on_step=True,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True
         )
         return loss
