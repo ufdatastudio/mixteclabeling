@@ -57,18 +57,20 @@ def main(args):
     parser.add_argument("--validate", action="store_false")
     parser.add_argument("--test", action="store_false")
     parser.add_argument(
-        "--run", default=f"mixtec-{_printdate()}", help="Name of tensorboard run"
+        "--run", default=f"mixtec-{_printdate()}", help="Name of tensorboard run."
     )
-    parser.add_argument("--logsdir", default="runs/", help="Directory for logs")
+    parser.add_argument("--logsdir", default="runs/", help="Directory for logs.")
+    parser.add_argument("--model", default="resnet18", help="Name of model.")
     args = parser.parse_args(args)
 
     # Deep Learning stuff ---------------
     seed_everything(42, workers=True)
 
     # Set up logging
-    logger = TensorBoardLogger(save_dir=args.logsdir, name=args.run)
+    logger = TensorBoardLogger(save_dir=args.logsdir, name=args.run, default_hp_metric=False)
     # Print log directory
     print(f">>> # Logging to {logger.log_dir}")
+    logger.log_hyperparams({"model": args.model})
 
     num_workers = len(os.sched_getaffinity(0))
     print(f">>> # Using {num_workers} workers")
@@ -107,9 +109,15 @@ def main(args):
 
     # Run the evaluation
 
-    trainer.fit(model, datamodule=dataset)
-    trainer.validate(model, datamodule=dataset)
-    # print('-'*80)
+    fitresults = trainer.fit(model, datamodule=dataset)
+    print('-'*80)
+    print(f"{fitresults=}")
+    print('-'*80)
+
+    valresults = trainer.validate(model, datamodule=dataset)
+    print('-'*80)
+    print(f"{valresults=}")
+    print('-'*80)
     #print(trainer.predict(model, datamodule=dataset))
     #trainer.test(model, dm)
 

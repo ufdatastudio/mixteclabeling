@@ -59,18 +59,33 @@ class MixtecModel(pl.LightningModule):
     def forward(self, x):
         return self.model(x)
 
+    def on_train_start(self):
+        self.logger.log_hyperparams(self.hparams, {"train_f1_epoch": 0.0,
+                                                    "train_prec_epoch": 0.0,
+                                                    "train_acc_epoch": 0.0,
+                                                    "train_rec_epoch": 0.0,
+                                                    "val_f1_epoch": 0.0,
+                                                    "val_prec_epoch": 0.0,
+                                                    "val_acc_epoch": 0.0,
+                                                    "val_rec_epoch": 0.0
+                                                    })
+    
+    def on_validation_end(self):
+        print(f"self.test_metrics.compute(): {self.val_metrics.compute()}")
+        print("Validation finished!") 
+
     def _common_step(self, batch, mode="train"):
         X, y = batch
         scores = self.forward(X)
         loss = self.loss_fn(scores, y)
         return loss, scores, y
+    
 
     def training_step(self, batch, batch_idx):
         loss, scores, y = self._common_step(batch, mode="train")
         preds = torch.argmax(scores, dim=1)
 
         self.train_metrics.update(preds, y)
-        # print(f"train: {self.train_metrics.compute()}")
         self.log_dict(
             self.train_metrics,
             on_step=True,
@@ -90,22 +105,27 @@ class MixtecModel(pl.LightningModule):
                         weight=self.model.conv1.weight)
         
         # self.showActivations(self.reference_image, layername="layer1", layer=self.model.layer1[0].conv1, weight=self.model.layer1[0].conv1.weight)
-        
         # self.showActivations(self.reference_image, layername="layer2", layer=self.model.layer2[0].conv1, weight=self.model.layer2[0].conv1.weight)
-        
         # self.showActivations(self.reference_image, layername="layer3", layer=self.model.layer3[0].conv1, weight=self.model.layer3[0].conv1.weight)
-        
         # self.showActivations(self.reference_image, layername="layer4", layer=self.model.layer4[0], weight=self.model.layer4[0].conv1.weight)
 
-
-
         return {"loss": loss, "scores": scores, "y": y}
+    
+    # def on_train_epoch_end(self):
+    #     print(f"Epoch {self.current_epoch} --------------------------- {self.train_metrics.compute()}")
+
+    #     if self.current_epoch > 0:
+    #         self.logger.log_hyperparams({"train_f1": self.train_metrics.f1})
+    #         self.logger.log_hyperparams({"train_acc": self.train_metrics.acc})
+    #         # self.logger.log_hyperparams({"train_loss": self.train_metrics.loss})
+    #         self.logger.log_hyperparams({"train_prec": self.train_metrics.prec})
+    #     self.train_metrics.reset()
 
     def validation_step(self, batch, batch_idx):
         loss, scores, y = self._common_step(batch, mode="val")
         preds = torch.argmax(scores, dim=1)
         self.val_metrics.update(preds, y)
-        # print(f"val: {self.val_metrics.compute()}")
+        # print(f"val: {self.train_metrics.compute()}")
         self.log_dict(
             self.val_metrics,
             on_step=True,
@@ -132,9 +152,6 @@ class MixtecModel(pl.LightningModule):
         return loss
     
     def configure_optimizers(self):
-        # optimizer = optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
-        # lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100,150], gamma=0.1)
-        # return [optimizer], [lr_scheduler]
         return self.optimizer
 
 
