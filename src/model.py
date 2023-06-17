@@ -12,7 +12,10 @@ import torchvision
 from torchvision.models import get_model, get_model_weights, get_weight, list_models
 import matplotlib.pyplot as plt 
 
+
 import numpy as np
+import pandas as pd
+import seaborn as sn
 
 from dataset import MixtecGenders
 
@@ -71,7 +74,8 @@ class MixtecModel(pl.LightningModule):
                                                     "val_acc_epoch": 0.0,
                                                     "val_rec_epoch": 0.0
                                                     })
-    
+
+
     def on_validation_end(self):
         print(f"self.test_metrics.compute(): {self.val_metrics.compute()}")
         print("Validation finished!") 

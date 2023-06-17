@@ -8,6 +8,13 @@ from PIL import Image
 import torch
 import numpy as np
 
+import sklearn
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sn
+import pandas as pd
+import numpy as np
+
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
@@ -100,3 +107,27 @@ class MixtecGenders(pl.LightningDataModule):
 
     def predict_dataloader(self):
         return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
+
+def createConfusionMatrix(loader, net):
+    y_pred = [] # save predction
+    y_true = [] # save ground truth
+
+    # iterate over data
+    for inputs, labels in loader:
+        output = net(inputs)  # Feed Network
+
+        output = (torch.max(torch.exp(output), 1)[1]).data.cpu().numpy()
+        y_pred.extend(output)  # save prediction
+
+        labels = labels.data.cpu().numpy()
+        y_true.extend(labels)  # save ground truth
+
+    # constant for classes
+    classes = ("female", "male")
+
+    # Build confusion matrix
+    cf_matrix = sklearn.metrics.confusion_matrix(y_true, y_pred)
+    df_cm = pd.DataFrame(cf_matrix / np.sum(cf_matrix, axis=1)[:, None], index=[i for i in classes],
+                         columns=[i for i in classes])
+    plt.figure(figsize=(12, 7))    
+    return sn.heatmap(df_cm, annot=True).get_figure()

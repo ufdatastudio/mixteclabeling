@@ -16,6 +16,7 @@ from pytorch_lightning import Trainer
 import config
 import model
 
+from dataset import createConfusionMatrix
 from dataset import MixtecGenders
 from model import MixtecModel
 
@@ -106,6 +107,9 @@ def main(args):
     # Run the evaluation
 
     fitresults = trainer.fit(model, datamodule=dataset)
+
+    # Create and log confusion matrix
+    logger.experiment.add_figure("Confusion matrix", createConfusionMatrix(dataset.train_dataloader(), model), config.EPOCHS)
     
     valresults = trainer.validate(model, datamodule=dataset)
     print('-'*80)
