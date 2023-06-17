@@ -5,6 +5,7 @@ import os
 
 from pathlib import Path
 from PIL import Image
+import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
 import pytorch_lightning as pl
@@ -17,6 +18,8 @@ class MixtecGenders(pl.LightningDataModule):
         super().__init__()
         self.batch_size = batch_size
         self.num_workers = num_workers
+
+        self.reference_dataloader = None
 
         if data_dir is None:
             self.basepath = Path(
@@ -52,8 +55,6 @@ class MixtecGenders(pl.LightningDataModule):
         nuttall_dataset = datasets.ImageFolder(self.path_n, transform=transform)
         selden_dataset = datasets.ImageFolder(self.path_s, transform=transform)
 
-
-
         self.figures_dataset = ConcatDataset(
             [vindobonensis_dataset, nuttall_dataset, selden_dataset]
         )
@@ -63,6 +64,26 @@ class MixtecGenders(pl.LightningDataModule):
         )
 
         print(dict(Counter(vindobonensis_dataset.targets)))
+    
+
+    @staticmethod
+    def get_reference_dataloader():
+        transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                # AddRandomBlockNoise(),
+                transforms.Resize((224, 224), antialias=True),
+                # transforms.Grayscale(),
+                # transforms.ColorJitter(contrast=0.5),
+                # transforms.RandomRotation(360),     # Maybe useful for standng and sitting
+                # transforms.RandomHorizontalFlip(50),
+                # transforms.RandomVerticalFlip(50)
+            ]
+        )
+
+        refimageset = datasets.ImageFolder("reference_images/", transform=transform)
+        return DataLoader(refimageset, batch_size=1)
+
 
     def train_dataloader(self):
         return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)

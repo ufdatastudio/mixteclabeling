@@ -14,17 +14,17 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
+from dataset import MixtecGenders
 
 class MixtecModel(pl.LightningModule):
-    def __init__(self, learning_rate, num_classes=2, model_name="resnet18"):
+    def __init__(self, learning_rate, num_classes=2, model_name="resnet18", reference_dataloader=None):
         super().__init__()
         self.save_hyperparameters()
         self.learning_rate = learning_rate
         self.loss_fn = nn.CrossEntropyLoss()
         #self.loss_fn = nn.NLLLoss()
         self.num_classes = num_classes
-        self.reference_image = None
-        self.reference_label = None
+        self.reference_dataloader = reference_dataloader
 
         # Get models from here https://pytorch.org/vision/main/models.html
         modeloptions = ['vit_h_14', 'regnet_y_128gf', 'vit_l_16', 'regnet_y_32gf', 'regnet_y_128gf', 'resnet18']
@@ -55,7 +55,9 @@ class MixtecModel(pl.LightningModule):
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
-
+    def set_reference_dataloader(self, reference_dataloader):
+        self.set_reference_dataloader = reference_dataloader
+    
     def forward(self, x):
         return self.model(x)
 
@@ -95,31 +97,18 @@ class MixtecModel(pl.LightningModule):
             add_dataloader_idx=True
         )
 
-        if batch_idx == 0 and self.reference_image is None:
-            self.reference_image = batch[0][2]
-            self.reference_label = y[2]
-        
-        self.showActivations(img=self.reference_image,
+        if self.reference_dataloader is None:
+            self.reference_dataloader = MixtecGenders.get_reference_dataloader()
+
+        if batch_idx == 0:
+            for img, label in self.reference_dataloader:
+                self.showActivations(img=img,
                         layername="conv1",
+                        label='female' if label.cpu() == 0 else 'male',
                         layer=self.model.conv1,
                         weight=self.model.conv1.weight)
-        
-        # self.showActivations(self.reference_image, layername="layer1", layer=self.model.layer1[0].conv1, weight=self.model.layer1[0].conv1.weight)
-        # self.showActivations(self.reference_image, layername="layer2", layer=self.model.layer2[0].conv1, weight=self.model.layer2[0].conv1.weight)
-        # self.showActivations(self.reference_image, layername="layer3", layer=self.model.layer3[0].conv1, weight=self.model.layer3[0].conv1.weight)
-        # self.showActivations(self.reference_image, layername="layer4", layer=self.model.layer4[0], weight=self.model.layer4[0].conv1.weight)
-
+                
         return {"loss": loss, "scores": scores, "y": y}
-    
-    # def on_train_epoch_end(self):
-    #     print(f"Epoch {self.current_epoch} --------------------------- {self.train_metrics.compute()}")
-
-    #     if self.current_epoch > 0:
-    #         self.logger.log_hyperparams({"train_f1": self.train_metrics.f1})
-    #         self.logger.log_hyperparams({"train_acc": self.train_metrics.acc})
-    #         # self.logger.log_hyperparams({"train_loss": self.train_metrics.loss})
-    #         self.logger.log_hyperparams({"train_prec": self.train_metrics.prec})
-    #     self.train_metrics.reset()
 
     def validation_step(self, batch, batch_idx):
         loss, scores, y = self._common_step(batch, mode="val")
@@ -157,6 +146,7 @@ class MixtecModel(pl.LightningModule):
 
     def showActivations(self,
                         img,
+                        label,
                         layername,
                         layer,
                         weight):
@@ -164,13 +154,12 @@ class MixtecModel(pl.LightningModule):
         Usage:
             self.showActivations(img=self.reference_image, layername="conv1", layer=self.model.conv1, weight=self.model.conv1.weight)
         """
-        if self.reference_image is None:
-            print(">>>No reference image found")
-            return
 
         # logging layer 1 activations
-        layer1 = layer
-        weight1 = weight
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        layer1 = layer.to(device)
+        weight1 = weight.to(device)
+        img = img.to(device)
 
         output1 = layer1(img)
 
@@ -178,6 +167,6 @@ class MixtecModel(pl.LightningModule):
         gray_scale1 = torch.sum(output1, dim=0)
         gray_scale1 = gray_scale1 / output1.shape[0]
 
-        self.logger.experiment.add_image(layername, gray_scale1,
+        self.logger.experiment.add_image(f"{label}-{layername}", gray_scale1,
                                          self.current_epoch, dataformats="HW")
         

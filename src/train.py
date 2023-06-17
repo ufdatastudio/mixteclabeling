@@ -41,13 +41,8 @@ class LoggingCallback(pl.Callback):
         metrics = trainer.callback_metrics
         pl_module.logger.log_metrics(metrics, step=trainer.global_step)
         for k, v in metrics.items():
-            # print(f">>>{k}: {v}")
-            # print(f">>>>{dir(pl_module)}")
-            # print(f">>>>>{dir(pl_module.logger)}")
-            # print(f">>>>>>{dir(pl_module.logger.experiment)}")
             pl_module.logger.log_metrics({k: v}, step=trainer.global_step)
             pl_module.logger.experiment.add_scalar(k, v, trainer.global_step)
-            #({k: v}, trainer.global_step)
 
 
 def main(args):
@@ -83,6 +78,7 @@ def main(args):
     # Configure the model
     #model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
     model = MixtecModel(config.LEARNING_RATE)
+    # model.set_reference_dataloader(dataset.reference_dataloader)
 
     # Train the model
     early_stopping = EarlyStopping(
