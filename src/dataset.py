@@ -5,6 +5,9 @@ import os
 
 from pathlib import Path
 from PIL import Image
+import torch
+import numpy as np
+
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
@@ -39,7 +42,7 @@ class MixtecGenders(pl.LightningDataModule):
         transform = transforms.Compose(
             [
                 transforms.ToTensor(),
-                # AddRandomBlockNoise(),
+                AddRandomBlockNoise(),
                 transforms.Resize((224, 224), antialias=True),
                 # transforms.Grayscale(),
                 # transforms.ColorJitter(contrast=0.5),
@@ -96,3 +99,30 @@ class MixtecGenders(pl.LightningDataModule):
 
     def predict_dataloader(self):
         return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
+
+
+# Random Block Transform
+class AddRandomBlockNoise(torch.nn.Module):
+    def __init__(self, n_k=8, size=64):
+        super(AddRandomBlockNoise, self).__init__()
+        self.n_k = int(n_k * np.random.rand()) # Random number of boxes
+        self.size = int(size * np.random.rand()) # Max size
+    
+    def forward(self, tensor):
+        h, w = self.size, self.size
+        img = np.asarray(tensor)
+        img_size_x = img.shape[1]
+        img_size_y = img.shape[2]
+        boxes = []
+        for k in range(self.n_k):
+            if (img_size_y >= h or img_size_x >=w): break
+            print(f"{h=} {w=} {img_size_x=} {img_size_y=}")
+            x = np.random.randint(0, img_size_x-w, 1)[0] # FIXME the shape may be zero
+            y = np.random.randint(0, img_size_y-h, 1)[0]
+            img[:, y:y+h, x:x+w] = 0
+            boxes.append((x,y,h,w))
+        #img = Image.fromarray(img.astype('uint8'), 'RGB')
+        return torch.from_numpy(img)
+    
+    def __repr__(self):
+        return self.__class__.__name__ + '(blocks={0}, size={1})'.format(self.n_k, self.size)

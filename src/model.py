@@ -99,6 +99,9 @@ class MixtecModel(pl.LightningModule):
 
         if self.reference_dataloader is None:
             self.reference_dataloader = MixtecGenders.get_reference_dataloader()
+            # Log the reference image
+            for img, label in self.reference_dataloader:
+                self.logger.experiment.add_image(f"reference_image {'female' if label.cpu() == 0 else 'male'}", img.squeeze(0), 0, dataformats="CHW")
 
         if batch_idx == 0:
             for img, label in self.reference_dataloader:

@@ -106,10 +106,7 @@ def main(args):
     # Run the evaluation
 
     fitresults = trainer.fit(model, datamodule=dataset)
-    print('-'*80)
-    print(f"{fitresults=}")
-    print('-'*80)
-
+    
     valresults = trainer.validate(model, datamodule=dataset)
     print('-'*80)
     print(f"{valresults=}")
