@@ -110,6 +110,7 @@ def main(args):
 
     # Create and log confusion matrix
     logger.experiment.add_figure("Confusion matrix", createConfusionMatrix(dataset.train_dataloader(), model), config.EPOCHS)
+    logger.experiment.add_figure("Confusion matrix", createConfusionMatrix(dataset.val_dataloader(), model), config.EPOCHS)
     
     valresults = trainer.validate(model, datamodule=dataset)
     print('-'*80)
