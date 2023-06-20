@@ -20,11 +20,11 @@ import seaborn as sn
 from dataset import MixtecGenders
 
 class MixtecModel(pl.LightningModule):
-    def __init__(self, learning_rate, num_classes=2, model_name="resnet18", reference_dataloader=None):
+    def __init__(self, learning_rate, num_classes=2, model_name="resnet18", num_epoch=2, reference_dataloader=None):
         super().__init__()
         self.save_hyperparameters()
         self.learning_rate = learning_rate
-        self.loss_fn = nn.CrossEntropyLoss()
+        self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/217, 1/555]))
         #self.loss_fn = nn.NLLLoss()
         self.num_classes = num_classes
         self.reference_dataloader = reference_dataloader
