@@ -6,14 +6,14 @@
 #SBATCH --mail-user=christan@ufl.edu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=128gb
+#SBATCH --mem=16gb
 #SBATCH --partition=gpu
-#SBATCH --gres=gpu:a100:2
+#SBATCH --gres=gpu:a100:1
 
 #module load ufrc
 module load pytorch/2.0.1
 #rm mixteclabeling.err mixteclabeling.out
-python3 -m pip install pytorch_lightning tensorboard
+python3 -m pip install pytorch_lightning tensorboard pandas numpy matplotlib seaborn scikit-learn
 # mamba install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 
 pwd
