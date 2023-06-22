@@ -61,6 +61,7 @@ def main(args):
 
     # Deep Learning stuff ---------------
     seed_everything(42, workers=True)
+    torch.set_float32_matmul_precision('medium')
 
     # Set up logging
     logger = TensorBoardLogger(save_dir=args.logsdir, name=args.run, default_hp_metric=False)
@@ -78,7 +79,7 @@ def main(args):
 
     # Configure the model
     #model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
-    model = MixtecModel(config.LEARNING_RATE)
+    model = MixtecModel(config.LEARNING_RATE, epoch=config.EPOCHS, model=args.model)
     # model.set_reference_dataloader(dataset.reference_dataloader)
 
     # Train the model

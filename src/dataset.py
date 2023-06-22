@@ -72,8 +72,12 @@ class MixtecGenders(pl.LightningDataModule):
         self.train_set, self.val_set, self.test_set = random_split(
             self.figures_dataset, [0.6, 0.3, 0.1]
         )
+        
+        train_labels = [item[1] for item in self.train_set]
+        print(f"Training Set: {Counter(train_labels)}")
 
-        print(dict(Counter(vindobonensis_dataset.targets)))
+        val_labels = [item[1] for item in self.val_set]
+        print(f"Validation Set: {Counter(val_labels)}")
     
 
     @staticmethod
