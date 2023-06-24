@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+from torchvision.transforms.functional import normalize, to_tensor, resize, to_pil_image
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -11,6 +12,9 @@ from torchmetrics import MetricCollection, Accuracy, Precision, Recall, F1Score
 import torchvision
 from torchvision.models import get_model, get_model_weights, get_weight, list_models
 import matplotlib.pyplot as plt 
+from PIL import Image
+from torchcam.utils import overlay_mask
+from torchcam.methods import SmoothGradCAMpp
 
 
 import numpy as np
@@ -40,7 +44,11 @@ class MixtecModel(pl.LightningModule):
         # FIXME update the last layer for all models
         if model_name == "resnet18":
             # Set the last layer
-            self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
+            self.model.fc = nn.Sequential()
+            self.model.fc.add_module("maxpool", nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False))
+            self.model.fc.add_module("conv1", nn.Conv2d(in_channels=256, out_channels=512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False))
+            self.model.fc.add_module("fc", nn.Linear(512, num_classes))
+            
             # Fine tuning the last layer
             plist = [{'params': self.model.fc.parameters(), 'lr': 1e-2} ]
             self.optimizer = optim.AdamW(plist, lr=self.hparams.learning_rate)
@@ -101,19 +109,19 @@ class MixtecModel(pl.LightningModule):
             add_dataloader_idx=True
         )
 
-        if self.reference_dataloader is None:
-            self.reference_dataloader = MixtecGenders.get_reference_dataloader()
-            # Log the reference image
-            for img, label in self.reference_dataloader:
-                self.logger.experiment.add_image(f"reference_image {'female' if label.cpu() == 0 else 'male'}", img.squeeze(0), 0, dataformats="CHW")
+        # if self.reference_dataloader is None:
+        #     self.reference_dataloader = MixtecGenders.get_reference_dataloader()
+        #     # Log the reference image
+        #     for img, label in self.reference_dataloader:
+        #         self.logger.experiment.add_image(f"reference_image {'female' if label.cpu() == 0 else 'male'}", img.squeeze(0), 0, dataformats="CHW")
 
-        if batch_idx == 0:
-            for img, label in self.reference_dataloader:
-                self.showActivations(img=img,
-                        layername="conv1",
-                        label='female' if label.cpu() == 0 else 'male',
-                        layer=self.model.conv1,
-                        weight=self.model.conv1.weight)
+        # if batch_idx == 0:
+        #     for img, label in self.reference_dataloader:
+        #         self.showActivations(img=img,
+        #                 layername="conv1",
+        #                 label='female' if label.cpu() == 0 else 'male',
+        #                 layer=self.model.conv1,
+        #                 weight=self.model.conv1.weight)
                 
         return {"loss": loss, "scores": scores, "y": y}
 
