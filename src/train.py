@@ -52,6 +52,15 @@ def _printdate(dt=datetime.datetime.now()):
     d = "{}-{}-{}-{}-{}".format(str(dt.month), str(dt.day), str(dt.year), hour, minute)
     return d
 
+def transform_image(image: Image) -> Image:
+    to_tensor        = transforms.ToTensor()
+    to_square        = transforms.Resize((224, 224), antialias=True)
+    to_three_channel = transforms.Lambda(lambda x: x[:3])
+
+    image            = to_three_channel(to_square(to_tensor(image)))
+    
+    return image
+
 class LoggingCallback(pl.Callback):
     def on_validation_end(self, trainer, pl_module):
         metrics = trainer.callback_metrics
@@ -131,72 +140,53 @@ def main(args):
     # logger.experiment.add_image("layer output", layer_output, model.current_epoch, dataformats="HW")
 
 
-    # images_from_layers_list = []
+    images_from_layers_list = []
 
-    # ## TODO: This is currently hardcoded for RESNET18; need to make it dynamic for any model.
-    # layer_list = ['layer1', 'layer2', 'layer3', 'layer4']
+    ## TODO: This is currently hardcoded for RESNET18; need to make it dynamic for any model.
+    layer_list = ['layer1', 'layer2', 'layer3', 'layer4']
 
-    # model.eval()
+    model.eval()
     
-    # # Preprocess it for your chosen model
-    # ## TODO: Probably need to make this dynamic too
-    # reference_image = transform_image(reference_image)
+    # Preprocess it for your chosen model
+    ## TODO: Probably need to make this dynamic too
+    reference_image = transform_image(reference_image)
 
-    # input_tensor = normalize(resize(reference_image, (224, 224)) / 255., [0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    input_tensor = normalize(resize(reference_image, (224, 224)) / 255., [0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 
-    # ## TODO: Make dynamic by device
+    ## TODO: Make dynamic by device
     # input_tensor = input_tensor.to('cuda')
     # model = model.to('cuda')
 
-    # # Preprocess your data and feed it to the model
-    # out = model(input_tensor.unsqueeze(0))
+    # Preprocess your data and feed it to the model
+    #out = model(input_tensor.unsqueeze(0))
 
-    # figure = plt.figure(figsize=(10,10))
+    figure = plt.figure(figsize=(10,10))
 
-    # for layer in layer_list:
+    for layer in layer_list:
 
-    #     layer = 'model.' + layer
+        layer = 'model.' + layer
 
-    #     cam_extractor = SmoothGradCAMpp(model, 'model.layer4')
+        cam_extractor = SmoothGradCAMpp(model, layer)
     
-    #     out = model(input_tensor.unsqueeze(0))
+        out = model(input_tensor.unsqueeze(0))
 
-    #     # Retrieve the CAM by passing the class index and the model output
-    #     activation_map = cam_extractor(out.squeeze(0).argmax().item())
+        # Retrieve the CAM by passing the class index and the model output
+        activation_map = cam_extractor(out.squeeze(0).argmax().item())
 
-    #     plt.imshow(activation_map[0].squeeze(0).numpy()); plt.axis('off'); plt.tight_layout(); plt.show()
+        plt.imshow(activation_map[0].squeeze(0).numpy()); plt.axis('off'); plt.tight_layout(); plt.show()
 
-    #     # Resize the CAM and overlay it
-    #     result = overlay_mask(to_pil_image(reference_image), to_pil_image(activation_map[0].squeeze(0), mode='F'), alpha=0.5)
+        # Resize the CAM and overlay it
+        result = overlay_mask(to_pil_image(reference_image), to_pil_image(activation_map[0].squeeze(0), mode='F'), alpha=0.5)
 
-    #     images_from_layers_list.append(result)
+        images_from_layers_list.append(result)
 
-    # for i in range(4):
-    #         # Start next subplot.
-    #         plt.subplot(2, 2, i + 1, title=layer_list[i])
-    #         plt.xticks([])
-    #         plt.yticks([])
-    #         plt.grid(False)
-    #         plt.imshow(images_from_layers_list[i], cmap=plt.cm.binary)
-
-    model.eval()
-
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        # transforms.RandomErasing(),
-        # transforms.Resize((224, 224), antialias=True),
-        # transforms.Lambda(lambda x: x[:3])
-        # # transforms.CenterCrop(224),
-        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-
-    input_tensor = transform(reference_image)
-
-    cam = grad_cam(model.model, input_tensor, model.model.layer4, "Mixtec_Woman")
-
-    print(cam)
-
-    # model.train()
+    for i in range(4):
+            # Start next subplot.
+            plt.subplot(2, 2, i + 1, title=layer_list[i])
+            plt.xticks([])
+            plt.yticks([])
+            plt.grid(False)
+            plt.imshow(images_from_layers_list[i], cmap=plt.cm.binary)
 
     #tensor_board_output = plot_to_image(figure)
 
