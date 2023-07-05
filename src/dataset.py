@@ -15,8 +15,8 @@ import seaborn as sn
 import pandas as pd
 import numpy as np
 
-import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+import torchvision.transforms as transforms
 from torchvision import transforms, datasets
 import pytorch_lightning as pl
 import torch.multiprocessing as mp
@@ -49,7 +49,7 @@ class MixtecGenders(pl.LightningDataModule):
         transform = transforms.Compose(
             [
                 transforms.ToTensor(),
-                transforms.RandomErasing(),
+                #transforms.RandomErasing(),
                 transforms.Resize((224, 224), antialias=True),
                 # transforms.Grayscale(),
                 # transforms.ColorJitter(contrast=0.5),
@@ -95,7 +95,7 @@ class MixtecGenders(pl.LightningDataModule):
             ]
         )
 
-        refimageset = datasets.ImageFolder("reference_images/", transform=transform)
+        refimageset = datasets.ImageFolder("../reference_images/", transform=transform)
         return DataLoader(refimageset, batch_size=1)
 
 
