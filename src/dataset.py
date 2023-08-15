@@ -49,13 +49,13 @@ class MixtecGenders(pl.LightningDataModule):
         transform = transforms.Compose(
             [
                 transforms.ToTensor(),
-                #transforms.RandomErasing(),
+                transforms.RandomErasing(),
                 transforms.Resize((224, 224), antialias=True),
                 # transforms.Grayscale(),
                 # transforms.ColorJitter(contrast=0.5),
-                # transforms.RandomRotation(360),     # Maybe useful for standng and sitting
-                # transforms.RandomHorizontalFlip(50),
-                # transforms.RandomVerticalFlip(50)
+                transforms.RandomRotation(360),     # Maybe useful for standng and sitting
+                transforms.RandomHorizontalFlip(50),
+                transforms.RandomVerticalFlip(50)
             ]
         )
 
@@ -131,7 +131,7 @@ def createConfusionMatrix(loader, net):
 
     # Build confusion matrix
     cf_matrix = sklearn.metrics.confusion_matrix(y_true, y_pred)
-    df_cm = pd.DataFrame(cf_matrix / np.sum(cf_matrix, axis=1)[:, None], index=[i for i in classes],
+    df_cm = pd.DataFrame(cf_matrix, index=[i for i in classes],
                          columns=[i for i in classes])
     plt.figure(figsize=(12, 7))    
     return sn.heatmap(df_cm, annot=True).get_figure()
