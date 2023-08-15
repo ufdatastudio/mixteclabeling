@@ -26,7 +26,8 @@ for learning_rate in "${learning_rates[@]}"; do
         echo "Learning rate: $learning_rate"
         echo "Batch size: $batch_size"
         ## add date as argument
-        python3 src/train.py --learning_rate $learning_rate --batch_size $batch_size --run "$date_run--lr$learning_rate--bs$batch_size--transformsHFlipVFlipRotationBlocks" &
+        sleep 3
+        python3 src/train.py --learning_rate $learning_rate --batch_size $batch_size --run "$date_run--lr$learning_rate--bs$batch_size--transforms" &
     done
 done
 
