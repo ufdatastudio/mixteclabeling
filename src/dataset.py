@@ -49,11 +49,11 @@ class MixtecGenders(pl.LightningDataModule):
         transform = transforms.Compose(
             [
                 transforms.ToTensor(),
-                #transforms.RandomErasing(),
+                transforms.RandomErasing(),
                 transforms.Resize((224, 224), antialias=True),
-                #transforms.RandomRotation(360),     # Maybe useful for standng and sitting
-                #transforms.RandomHorizontalFlip(50),
-                #transforms.RandomVerticalFlip(50)
+                transforms.RandomRotation(360),     # Maybe useful for standng and sitting
+                transforms.RandomHorizontalFlip(50),
+                transforms.RandomVerticalFlip(50)
             ]
         )
 

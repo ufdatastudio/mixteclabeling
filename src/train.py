@@ -145,11 +145,11 @@ def main(args):
 
     trainer = Trainer(devices="auto", accelerator="auto", #auto_lr_find=True,
                       logger=logger, log_every_n_steps=1, enable_progress_bar=True,
-                      min_epochs=1, max_epochs=config.EPOCHS,
+                      min_epochs=1, max_epochs=args.epochs,
                       callbacks=[
                         #   BatchSizeFinder(init_val=64),
                         # LearningRateFinder(),
-                        #early_stopping,
+                        early_stopping,
                         # LoggingCallback(),
                           ])
 
@@ -164,8 +164,8 @@ def main(args):
     print("Done loading")
 
     # Create and log confusion matrix
-    logger.experiment.add_figure("Confusion matrix", createConfusionMatrix(dataset.train_dataloader(), model), config.EPOCHS)
-    logger.experiment.add_figure("Confusion matrix", createConfusionMatrix(dataset.val_dataloader(), model), config.EPOCHS)
+    logger.experiment.add_figure("Confusion matrix", createConfusionMatrix(dataset.train_dataloader(), model), args.epochs)
+    logger.experiment.add_figure("Confusion matrix", createConfusionMatrix(dataset.val_dataloader(), model), args.epochs)
     
     # valresults = trainer.validate(model, datamodule=dataset)
     print('-'*80)

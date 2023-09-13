@@ -27,7 +27,7 @@ import io
 from dataset import MixtecGenders
 
 class MixtecModel(pl.LightningModule):
-    def __init__(self, learning_rate, num_classes=2, model_name="vit_l_16", num_epoch=2, reference_dataloader=None):
+    def __init__(self, learning_rate, num_classes=2, model_name="vgg16", num_epoch=2, reference_dataloader=None):
         super().__init__()
         self.save_hyperparameters()
         self.learning_rate = learning_rate
@@ -46,7 +46,7 @@ class MixtecModel(pl.LightningModule):
 
 
         # FIXME update the last layer for all models
-        if model_name == "vit_l_16":
+        if model_name == "vgg16":
             # Set the last layer
             self.model.heads = nn.Sequential()
             # self.model.fc.add_module("maxpool", nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False))
@@ -56,6 +56,12 @@ class MixtecModel(pl.LightningModule):
             # Fine tuning the last layer
             plist = [{'params': self.model.heads.parameters(), 'lr': 1e-2} ]
             #self.optimizer = optim.AdamW(plist, lr=self.hparams.learning_rate)
+
+            # Unfreeze last layers:
+            ## Unfreeze layers
+            for i in range(24, 30):
+                for param in self.model.features[i].parameters():
+                    param.requires_grad = True
 
         # Set up metrics
         metrics = MetricCollection(

@@ -1,6 +1,12 @@
 # ignore image files
 
 data/labeled_figures/
+archive/
+notebooks/cam_output
+notebooks/images
+notebooks/model_saves
+out/
+tmp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
