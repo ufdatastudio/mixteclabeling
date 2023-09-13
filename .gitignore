@@ -1,7 +1,9 @@
 # ignore image files
 
 data/labeled_figures/
-archive/
+archive/models
+archive/tutorial_images
+archive/videos
 notebooks/cam_output
 notebooks/images
 notebooks/model_saves
