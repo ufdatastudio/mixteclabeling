@@ -7,6 +7,6 @@ batch_sizes=(128 64 32 16)
 for learning_rate in "${learning_rates[@]}"; do
     for batch_size in "${batch_sizes[@]}"; do
         ## add date as argument
-        sbatch -J "lr$learning_rate-bs$batch_size" runmodeltemplate.sh $learning_rate $batch_size
+        sbatch -J "lr$learning_rate-bs$batch_size" scripts/runmodeltemplate.sh $learning_rate $batch_size
     done
 done

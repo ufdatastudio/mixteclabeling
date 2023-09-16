@@ -94,8 +94,8 @@ def main(args):
     parser.add_argument(
         "--run", default=f"mixtec-{_printdate()}", help="Name of tensorboard run."
     )
-    parser.add_argument("--logsdir", default="runs/", help="Directory for logs.")
-    parser.add_argument("--model", default="vit_l_16", help="Name of model.")
+    parser.add_argument("--logsdir", default="out/runs/", help="Directory for logs.")
+    parser.add_argument("--model", default="vgg16", help="Name of model.")
     parser.add_argument("--batch_size", default=32, help="Batch size.")
     parser.add_argument("--learning_rate", default=1e-3, help="Learning rate.")
     parser.add_argument("--epochs", default=10, help="Number of epochs.")
@@ -149,7 +149,7 @@ def main(args):
                       callbacks=[
                         #   BatchSizeFinder(init_val=64),
                         # LearningRateFinder(),
-                        early_stopping,
+                        #early_stopping,
                         # LoggingCallback(),
                           ])
 

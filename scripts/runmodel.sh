@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=mixteclabeling
-#SBATCH --output=mixteclabeling.out
-#SBATCH --error=mixteclabeling.err
+#SBATCH --output=out/logs/mixteclabeling.out
+#SBATCH --error=out/logs/err/mixteclabeling.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=alexwebber@ufl.edu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=128gb
 #SBATCH --partition=gpu
-#SBATCH --gres=gpu:a100:4
+#SBATCH --gres=gpu:a100:1
 
 #module load ufrc
 module load pytorch/2.0.1

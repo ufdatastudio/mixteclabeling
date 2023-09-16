@@ -31,8 +31,8 @@ class MixtecModel(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
         self.learning_rate = learning_rate
-        self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/382, 1/903]))
-        #self.loss_fn = nn.CrossEntropyLoss()
+        #self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/382, 1/903]))
+        self.loss_fn = nn.CrossEntropyLoss()
         #self.loss_fn = nn.NLLLoss()
         self.num_classes = num_classes
         self.reference_dataloader = reference_dataloader
@@ -48,13 +48,16 @@ class MixtecModel(pl.LightningModule):
         # FIXME update the last layer for all models
         if model_name == "vgg16":
             # Set the last layer
-            self.model.heads = nn.Sequential()
-            # self.model.fc.add_module("maxpool", nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False))
-            # self.model.fc.add_module("conv1", nn.Conv2d(in_channels=256, out_channels=512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False))
-            self.model.heads.add_module("heads", nn.Linear(1024, num_classes))
+            # self.model.heads = nn.Sequential()
+            # # self.model.fc.add_module("maxpool", nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False))
+            # # self.model.fc.add_module("conv1", nn.Conv2d(in_channels=256, out_channels=512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False))
+
+            #self.model.fc = nn.Linear(4096, 2)
+
+            self.model.classifier[6] = nn.Linear(4096, 2)
             
             # Fine tuning the last layer
-            plist = [{'params': self.model.heads.parameters(), 'lr': 1e-2} ]
+            # plist = [{'params': self.model.classifier.parameters(), 'lr': 1e-2} ]
             #self.optimizer = optim.AdamW(plist, lr=self.hparams.learning_rate)
 
             # Unfreeze last layers:
