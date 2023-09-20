@@ -98,12 +98,13 @@ def main(args):
     parser.add_argument("--model", default="vgg16", help="Name of model.")
     parser.add_argument("--batch_size", default=32, help="Batch size.")
     parser.add_argument("--learning_rate", default=1e-3, help="Learning rate.")
-    parser.add_argument("--epochs", default=10, help="Number of epochs.")
+    parser.add_argument("--epochs", default=1000, help="Number of epochs.")
     args = parser.parse_args(args)
 
     args.learning_rate = args.learning_rate if args.learning_rate else config.LEARNING_RATE
     args.batch_size = args.batch_size if args.batch_size else config.BATCH_SIZE
     args.epochs = args.epochs if args.epochs else config.EPOCHS
+    args.model = args.model if args.model else config.MODEL
 
     # Deep Learning stuff ---------------
     seed_everything(42, workers=True)

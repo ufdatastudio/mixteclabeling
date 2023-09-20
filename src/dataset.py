@@ -49,11 +49,10 @@ class MixtecGenders(pl.LightningDataModule):
         transform = transforms.Compose(
             [
                 transforms.ToTensor(),
-                transforms.RandomErasing(),
                 transforms.Resize((224, 224), antialias=True),
-                transforms.RandomRotation(360),     # Maybe useful for standng and sitting
-                transforms.RandomHorizontalFlip(50),
-                transforms.RandomVerticalFlip(50)
+                #transforms.RandomErasing(),
+                #transforms.RandomHorizontalFlip(p=50),
+                #transforms.RandomVerticalFlip(p=50)
             ]
         )
 
@@ -68,7 +67,7 @@ class MixtecGenders(pl.LightningDataModule):
         )
 
         self.train_set, self.val_set, self.test_set = random_split(
-            self.figures_dataset, [0.6, 0.3, 0.1]
+            self.figures_dataset, [0.6, 0.2, 0.2]
         )
         
         train_labels = [item[1] for item in self.train_set]
