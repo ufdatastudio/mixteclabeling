@@ -22,4 +22,4 @@ date_run=$(date +"%F")
 echo "Learning rate: $learning_rate"
 echo "Batch size: $batch_size"
 ## add date as argument
-python3 src/train.py --learning_rate $learning_rate --batch_size $batch_size --model $model --run "$model--$date_run--lr$learning_rate--bs$batch_size--transformsNone"
+python3 src/train.py --learning_rate $learning_rate --batch_size $batch_size --model $model --run "$date_run--$model--lr$learning_rate--bs$batch_size--transformsNone"
