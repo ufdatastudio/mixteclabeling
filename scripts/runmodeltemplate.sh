@@ -16,10 +16,14 @@ module load pytorch/2.0.1
 learning_rate=$1
 batch_size=$2
 model=$3
+transforms=$4
 date_run=$(date +"%F")
-
 
 echo "Learning rate: $learning_rate"
 echo "Batch size: $batch_size"
+echo "Model: $model"
+echo "Transforms: $transforms"
+echo "Date: $date_run"
+
 ## add date as argument
-python3 src/train.py --learning_rate $learning_rate --batch_size $batch_size --model $model --run "$date_run--$model--lr$learning_rate--bs$batch_size--transformsNone"
+python3 src/train.py --learning_rate $learning_rate --batch_size $batch_size --model $model --transforms $transforms --run "$date_run--$model--lr$learning_rate--bs$batch_size--transforms$transforms"

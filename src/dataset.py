@@ -24,7 +24,7 @@ import torch.multiprocessing as mp
 from torch.utils.data import ConcatDataset, random_split
 
 class MixtecGenders(pl.LightningDataModule):
-    def __init__(self, data_dir=None, batch_size=125, num_workers=8):
+    def __init__(self, data_dir=None, batch_size=125, num_workers=8, input_transforms=None):
         super().__init__()
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -39,6 +39,27 @@ class MixtecGenders(pl.LightningDataModule):
         else:
             self.data_dir = data_dir
 
+        ## Set default transforms, then append based on input transform array
+        self.input_transforms = transforms.Compose(
+                        [
+                            transforms.ToTensor(),
+                            transforms.Resize((224, 224), antialias=True),
+                        ]
+                    )
+
+
+        if 'RandomErasing' in input_transforms:
+            print("Using random erasing")
+            self.input_transforms.transforms.append(transforms.RandomErasing())
+
+        if 'RandomHorizontalFlip' in input_transforms:
+            print("Using random horizontal flip")
+            self.input_transforms.transforms.append(transforms.RandomHorizontalFlip())
+
+        if 'RandomVerticalFlip' in input_transforms:
+            print("Using random vertical flip")
+            self.input_transforms.transforms.append(transforms.RandomVerticalFlip())
+
     def prepare_dataset(self):
         self.path_v = self.basepath / "data/labeled_figures/codex_vindobonensis/gender/"
         self.path_n = self.basepath / "data/labeled_figures/codex_nuttall/gender/"
@@ -46,15 +67,7 @@ class MixtecGenders(pl.LightningDataModule):
 
     def setup(self, stage):
         ## Load images into PyTorch dataset
-        transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Resize((224, 224), antialias=True),
-                #transforms.RandomErasing(),
-                #transforms.RandomHorizontalFlip(p=50),
-                #transforms.RandomVerticalFlip(p=50)
-            ]
-        )
+        transform = self.input_transforms
 
         self.prepare_dataset()
 

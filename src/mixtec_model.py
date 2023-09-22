@@ -1,30 +1,18 @@
 import torch
-import torch.nn.functional as F
-import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from torchvision.transforms.functional import normalize, to_tensor, resize, to_pil_image
+from torchvision.transforms.functional import normalize, resize, to_pil_image
 from torchvision.transforms import ToTensor
 from torch import nn, optim
-from torch.utils.data import DataLoader
-from tqdm import tqdm
 import pytorch_lightning as pl
-import torchmetrics
 from torchmetrics import MetricCollection, Accuracy, Precision, Recall, F1Score
-import torchvision
-from torchvision.models import get_model, get_model_weights, get_weight, list_models
+from torchvision.models import get_model, get_model_weights
 import matplotlib.pyplot as plt 
 from PIL import Image
 
 from torchcam.utils import overlay_mask
 from torchcam.methods import SmoothGradCAMpp
 
-
-import numpy as np
-import pandas as pd
-import seaborn as sn
 import io
-
-from dataset import MixtecGenders
 
 class MixtecModel(pl.LightningModule):
     def __init__(self, learning_rate, num_classes=2, model_name="vgg16", num_epoch=1000, reference_dataloader=None):
@@ -32,8 +20,6 @@ class MixtecModel(pl.LightningModule):
         self.save_hyperparameters()
         self.learning_rate = learning_rate
         self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/382, 1/903]))
-        #self.loss_fn = nn.CrossEntropyLoss()
-        #self.loss_fn = nn.NLLLoss()
         self.num_classes = num_classes
         self.reference_dataloader = reference_dataloader
 
@@ -43,24 +29,34 @@ class MixtecModel(pl.LightningModule):
         weights = get_model_weights(model_name).DEFAULT
         self.model = get_model(model_name, weights=weights)
         self.optimizer = optim.AdamW(self.model.parameters(), lr=self.hparams.learning_rate)
-
-
-        # FIXME update the last layer for all models
+        
         if model_name == "vgg16":
             self.model.classifier[6] = nn.Linear(4096, 2)
             
+            for i in range(0, 20):
+                for param in self.model.features[i].parameters():
+                    param.requires_grad = False
+
+            # Fine tuning last layers
             for i in range(21, 30):
                 for param in self.model.features[i].parameters():
                     param.requires_grad = True
+
 
         elif model_name == "vit_l_16":
             # Set the last layer
             self.model.heads = nn.Sequential()
 
             self.model.heads.add_module("heads", nn.Linear(1024, num_classes))
-            
-            # Fine tuning the last layer
-            plist = [{'params': self.model.heads.parameters(), 'lr': 1e-2} ]
+
+            # Fine tuning last layers
+            for i, (name, param) in enumerate(self.model.named_parameters()):
+
+                if i > 231:
+                    param.requires_grad = True
+
+                else:
+                    param.requires_grad = False
 
 
         # Set up metrics
