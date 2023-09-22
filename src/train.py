@@ -98,13 +98,15 @@ def main(args):
     parser.add_argument("--model", default="vgg16", help="Name of model.")
     parser.add_argument("--batch_size", default=32, help="Batch size.")
     parser.add_argument("--learning_rate", default=1e-3, help="Learning rate.")
-    parser.add_argument("--epochs", default=1000, help="Number of epochs.")
+    parser.add_argument("--epochs", default=1, help="Number of epochs.")
+    parser.add_argument("--transforms", default="", help="Transforms to apply.")
     args = parser.parse_args(args)
 
     args.learning_rate = args.learning_rate if args.learning_rate else config.LEARNING_RATE
     args.batch_size = args.batch_size if args.batch_size else config.BATCH_SIZE
     args.epochs = args.epochs if args.epochs else config.EPOCHS
     args.model = args.model if args.model else config.MODEL
+    args.transforms = args.transforms if args.transforms else config.TRANSFORMS
 
     # Deep Learning stuff ---------------
     seed_everything(42, workers=True)
@@ -122,15 +124,14 @@ def main(args):
     print(f">>> # Using {num_workers} workers")
     # Get the data set
     # Using only one worker is faster
-    dataset = MixtecGenders(num_workers=1, batch_size=int(args.batch_size))
+    # transforms are passed as a underscore-separated string, need to split to pass as list
+    dataset = MixtecGenders(num_workers=1, batch_size=int(args.batch_size), input_transforms=args.transforms.split("_"))
 
     #print(dict(Counter(dataset.targets)))
 
     # Configure the model
     #model = NN(config.BATCH_SIZE, config.LEARNING_RATE)
     model = m.MixtecModel(learning_rate=float(args.learning_rate), num_epoch=int(args.epochs), model_name=args.model)
-
-    print(model)
     
     #model = resnet18(pretrained=True).eval()
     # model.set_reference_dataloader(dataset.reference_dataloader)
