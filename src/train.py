@@ -98,7 +98,7 @@ def main(args):
     parser.add_argument("--model", default="vgg16", help="Name of model.")
     parser.add_argument("--batch_size", default=32, help="Batch size.")
     parser.add_argument("--learning_rate", default=1e-3, help="Learning rate.")
-    parser.add_argument("--epochs", default=1, help="Number of epochs.")
+    parser.add_argument("--epochs", default=100, help="Number of epochs.")
     parser.add_argument("--transforms", default="", help="Transforms to apply.")
     args = parser.parse_args(args)
 
