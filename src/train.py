@@ -100,6 +100,7 @@ def main(args):
     parser.add_argument("--learning_rate", default=1e-3, help="Learning rate.")
     parser.add_argument("--epochs", default=100, help="Number of epochs.")
     parser.add_argument("--transforms", default="", help="Transforms to apply.")
+    parser.add_argument("--category", default="pose", help="Category to train on.")
     args = parser.parse_args(args)
 
     args.learning_rate = args.learning_rate if args.learning_rate else config.LEARNING_RATE
@@ -107,6 +108,7 @@ def main(args):
     args.epochs = args.epochs if args.epochs else config.EPOCHS
     args.model = args.model if args.model else config.MODEL
     args.transforms = args.transforms if args.transforms else config.TRANSFORMS
+    args.category = args.category if args.category else config.CATEGORY
 
     # Deep Learning stuff ---------------
     seed_everything(42, workers=True)
@@ -125,7 +127,7 @@ def main(args):
     # Get the data set
     # Using only one worker is faster
     # transforms are passed as a underscore-separated string, need to split to pass as list
-    dataset = MixtecGenders(num_workers=1, batch_size=int(args.batch_size), input_transforms=args.transforms.split("_"))
+    dataset = MixtecGenders(num_workers=1, batch_size=int(args.batch_size), input_transforms=args.transforms.split("_"), category=args.category)
 
     #print(dict(Counter(dataset.targets)))
 

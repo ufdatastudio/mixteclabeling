@@ -24,10 +24,11 @@ import torch.multiprocessing as mp
 from torch.utils.data import ConcatDataset, random_split
 
 class MixtecGenders(pl.LightningDataModule):
-    def __init__(self, data_dir=None, batch_size=125, num_workers=8, input_transforms=None):
+    def __init__(self, data_dir=None, batch_size=125, num_workers=8, input_transforms=None, category=""):
         super().__init__()
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.category = str(category)
 
         self.reference_dataloader = None
 
@@ -61,9 +62,14 @@ class MixtecGenders(pl.LightningDataModule):
             self.input_transforms.transforms.append(transforms.RandomVerticalFlip())
 
     def prepare_dataset(self):
-        self.path_v = self.basepath / "data/labeled_figures/codex_vindobonensis/gender/"
-        self.path_n = self.basepath / "data/labeled_figures/codex_nuttall/gender/"
-        self.path_s = self.basepath / "data/labeled_figures/codex_selden/gender/"
+        string_path_v = "data/labeled_figures/codex_vindobonensis/" + self.category + "/"
+        string_path_n = "data/labeled_figures/codex_nuttall/" + self.category + "/"
+        string_path_s = "data/labeled_figures/codex_selden/" + self.category + "/"
+
+
+        self.path_v = self.basepath / string_path_v
+        self.path_n = self.basepath / string_path_n
+        self.path_s = self.basepath / string_path_s
 
     def setup(self, stage):
         ## Load images into PyTorch dataset
@@ -96,12 +102,6 @@ class MixtecGenders(pl.LightningDataModule):
             [
                 transforms.ToTensor(),
                 transforms.Resize((224, 224), antialias=True),
-                # transforms.RandomErasing(),
-                # transforms.Grayscale(),
-                # transforms.ColorJitter(contrast=0.5),
-                # transforms.RandomRotation(360),     # Maybe useful for standng and sitting
-                # transforms.RandomHorizontalFlip(50),
-                # transforms.RandomVerticalFlip(50)
             ]
         )
 
