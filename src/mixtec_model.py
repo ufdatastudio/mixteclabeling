@@ -33,12 +33,12 @@ class MixtecModel(pl.LightningModule):
         if model_name == "vgg16":
             self.model.classifier[6] = nn.Linear(4096, 2)
             
-            for i in range(0, 20):
+            for i in range(0, 19):
                 for param in self.model.features[i].parameters():
                     param.requires_grad = False
 
             # Fine tuning last layers
-            for i in range(21, 30):
+            for i in range(19, 30):
                 for param in self.model.features[i].parameters():
                     param.requires_grad = True
 
