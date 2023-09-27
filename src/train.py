@@ -103,6 +103,8 @@ def main(args):
     parser.add_argument("--category", default="pose", help="Category to train on.")
     args = parser.parse_args(args)
 
+
+    args.logsdir = args.logsdir if args.logsdir else config.RUNS_DIR
     args.learning_rate = args.learning_rate if args.learning_rate else config.LEARNING_RATE
     args.batch_size = args.batch_size if args.batch_size else config.BATCH_SIZE
     args.epochs = args.epochs if args.epochs else config.EPOCHS
