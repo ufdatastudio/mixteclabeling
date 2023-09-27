@@ -6,7 +6,7 @@ learning_rates=(0.0001 0.00025 0.0005 0.001 0.01 0.1)
 batch_sizes=(128 64 32 16)
 model=("vit_l_16" "vgg16")
 transforms=("RandomErasing_RandomHorizontalFlip_RandomVerticalFlip" "RandomErasing" "RandomHorizontalFlip_RandomVerticalFlip" "None")
-category=("gender")
+category=("pose")
 
 # create an array with all variables above
 

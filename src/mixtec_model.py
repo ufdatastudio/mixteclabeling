@@ -19,7 +19,6 @@ class MixtecModel(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
         self.learning_rate = learning_rate
-        self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/382, 1/903]))
         self.num_classes = num_classes
         self.reference_dataloader = reference_dataloader
 
@@ -29,11 +28,20 @@ class MixtecModel(pl.LightningModule):
         weights = get_model_weights(model_name).DEFAULT
         self.model = get_model(model_name, weights=weights)
         self.optimizer = optim.AdamW(self.model.parameters(), lr=self.hparams.learning_rate)
+
+
+        ## TODO: Make relative to task at hand
+        ## Relative loss function biasing
+        self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/386, 1/899]))
+
+        ## Relative loss function biasing
+        #self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/382, 1/903]))
         
         if model_name == "vgg16":
             self.model.classifier[6] = nn.Linear(4096, 2)
             
             for i in range(0, 19):
+                
                 for param in self.model.features[i].parameters():
                     param.requires_grad = False
 

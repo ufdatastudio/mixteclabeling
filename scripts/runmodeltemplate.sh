@@ -14,7 +14,7 @@
 module load pytorch/2.0.1
 
 learning_rate=$1
-batch_size=$2
+batch_size=$2s
 model=$3
 transforms=$4
 category=$5
