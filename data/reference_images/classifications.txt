@@ -1,0 +1,24 @@
+Gender:
+    Male:
+        data/reference_images/gender/male/001-a-04.png
+        data/reference_images/gender/male/013-a-10.png
+        data/reference_images/gender/male/044-a-04.png
+        data/reference_images/gender/male/067-a-09.png
+
+    Female:
+        data/reference_images/gender/female/003-a-05.png
+        data/reference_images/gender/female/003-a-06.png
+        data/reference_images/gender/female/032-a-10.png
+        data/reference_images/gender/female/072-a-04.png
+
+Pose:
+    Standing:
+        data/reference_images/pose/standing/001-a-04.png
+        data/reference_images/pose/standing/003-a-06.png
+        data/reference_images/pose/standing/013-a-10.png
+        data/reference_images/pose/standing/072-a-04.png
+    Not Standing:
+        data/reference_images/pose/not_standing/003-a-05.png
+        data/reference_images/pose/not_standing/032-a-10.png
+        data/reference_images/pose/not_standing/044-a-04.png
+        data/reference_images/pose/not_standing/067-a-09.png

@@ -15,8 +15,8 @@ import seaborn as sn
 import pandas as pd
 import numpy as np
 
-import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+import torchvision.transforms as transforms
 from torchvision import transforms, datasets
 import pytorch_lightning as pl
 import torch.multiprocessing as mp
@@ -24,10 +24,11 @@ import torch.multiprocessing as mp
 from torch.utils.data import ConcatDataset, random_split
 
 class MixtecGenders(pl.LightningDataModule):
-    def __init__(self, data_dir=None, batch_size=125, num_workers=8):
+    def __init__(self, data_dir=None, batch_size=125, num_workers=8, input_transforms=None, category=""):
         super().__init__()
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.category = str(category)
 
         self.reference_dataloader = None
 
@@ -39,25 +40,40 @@ class MixtecGenders(pl.LightningDataModule):
         else:
             self.data_dir = data_dir
 
+        ## Set default transforms, then append based on input transform array
+        self.input_transforms = transforms.Compose(
+                        [
+                            transforms.ToTensor(),
+                            transforms.Resize((224, 224), antialias=True),
+                        ]
+                    )
+
+
+        if 'RandomErasing' in input_transforms:
+            print("Using random erasing")
+            self.input_transforms.transforms.append(transforms.RandomErasing())
+
+        if 'RandomHorizontalFlip' in input_transforms:
+            print("Using random horizontal flip")
+            self.input_transforms.transforms.append(transforms.RandomHorizontalFlip())
+
+        if 'RandomVerticalFlip' in input_transforms:
+            print("Using random vertical flip")
+            self.input_transforms.transforms.append(transforms.RandomVerticalFlip())
+
     def prepare_dataset(self):
-        self.path_v = self.basepath / "data/labeled_figures/codex_vindobonensis/gender/"
-        self.path_n = self.basepath / "data/labeled_figures/codex_nuttall/gender/"
-        self.path_s = self.basepath / "data/labeled_figures/codex_selden/gender/"
+        string_path_v = "data/labeled_figures/codex_vindobonensis/" + self.category + "/"
+        string_path_n = "data/labeled_figures/codex_nuttall/" + self.category + "/"
+        string_path_s = "data/labeled_figures/codex_selden/" + self.category + "/"
+
+
+        self.path_v = self.basepath / string_path_v
+        self.path_n = self.basepath / string_path_n
+        self.path_s = self.basepath / string_path_s
 
     def setup(self, stage):
         ## Load images into PyTorch dataset
-        transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.RandomErasing(),
-                transforms.Resize((224, 224), antialias=True),
-                # transforms.Grayscale(),
-                # transforms.ColorJitter(contrast=0.5),
-                # transforms.RandomRotation(360),     # Maybe useful for standng and sitting
-                # transforms.RandomHorizontalFlip(50),
-                # transforms.RandomVerticalFlip(50)
-            ]
-        )
+        transform = self.input_transforms
 
         self.prepare_dataset()
 
@@ -70,7 +86,7 @@ class MixtecGenders(pl.LightningDataModule):
         )
 
         self.train_set, self.val_set, self.test_set = random_split(
-            self.figures_dataset, [0.6, 0.3, 0.1]
+            self.figures_dataset, [0.6, 0.2, 0.2]
         )
         
         train_labels = [item[1] for item in self.train_set]
@@ -78,6 +94,9 @@ class MixtecGenders(pl.LightningDataModule):
 
         val_labels = [item[1] for item in self.val_set]
         print(f"Validation Set: {Counter(val_labels)}")
+
+        test_labels = [item[1] for item in self.test_set]
+        print(f"Test Set: {Counter(test_labels)}")
     
 
     @staticmethod
@@ -86,19 +105,11 @@ class MixtecGenders(pl.LightningDataModule):
             [
                 transforms.ToTensor(),
                 transforms.Resize((224, 224), antialias=True),
-                # transforms.RandomErasing(),
-                # transforms.Grayscale(),
-                # transforms.ColorJitter(contrast=0.5),
-                # transforms.RandomRotation(360),     # Maybe useful for standng and sitting
-                # transforms.RandomHorizontalFlip(50),
-                # transforms.RandomVerticalFlip(50)
             ]
         )
 
-        refimageset = datasets.ImageFolder("reference_images/", transform=transform)
+        refimageset = datasets.ImageFolder("../reference_images/", transform=transform)
         return DataLoader(refimageset, batch_size=1)
-
-
 
     def train_dataloader(self):
         return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
@@ -131,7 +142,7 @@ def createConfusionMatrix(loader, net):
 
     # Build confusion matrix
     cf_matrix = sklearn.metrics.confusion_matrix(y_true, y_pred)
-    df_cm = pd.DataFrame(cf_matrix / np.sum(cf_matrix, axis=1)[:, None], index=[i for i in classes],
+    df_cm = pd.DataFrame(cf_matrix, index=[i for i in classes],
                          columns=[i for i in classes])
     plt.figure(figsize=(12, 7))    
     return sn.heatmap(df_cm, annot=True).get_figure()
