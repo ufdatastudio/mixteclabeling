@@ -12,4 +12,4 @@ LEARNING_RATE=0.00025
 MODEL="vgg16"
 TRANSFORMS=""
 CATEGORY="gender"
-RUNS_DIR="test/"
+RUNS_DIR="out/runs"
