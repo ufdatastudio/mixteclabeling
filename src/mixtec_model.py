@@ -31,10 +31,10 @@ class MixtecModel(pl.LightningModule):
 
 
         ## TODO: Make relative to task at hand
-        ## Relative loss function biasing
+        ## Relative loss function biasing (gender)
         self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/386, 1/899]))
 
-        ## Relative loss function biasing
+        ## Relative loss function biasing (gender)
         #self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/382, 1/903]))
         
         if model_name == "vgg16":

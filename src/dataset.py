@@ -94,6 +94,9 @@ class MixtecGenders(pl.LightningDataModule):
 
         val_labels = [item[1] for item in self.val_set]
         print(f"Validation Set: {Counter(val_labels)}")
+
+        test_labels = [item[1] for item in self.test_set]
+        print(f"Test Set: {Counter(test_labels)}")
     
 
     @staticmethod
@@ -107,8 +110,6 @@ class MixtecGenders(pl.LightningDataModule):
 
         refimageset = datasets.ImageFolder("../reference_images/", transform=transform)
         return DataLoader(refimageset, batch_size=1)
-
-
 
     def train_dataloader(self):
         return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
