@@ -6,6 +6,7 @@ import io
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 from PIL import Image
 
 import torch
@@ -89,13 +90,13 @@ def main(args):
     parser.add_argument("--validate", action="store_false")
     parser.add_argument("--test", action="store_false")
     parser.add_argument("--run", default=f"mixtec-{_printdate()}", help="Name of tensorboard run.")
-    parser.add_argument("--logsdir", default="test/", help="Directory for logs.")
+    parser.add_argument("--logsdir", default="out/transform_test/", help="Directory for logs.")
     parser.add_argument("--model", default="vgg16", help="Name of model.")
     parser.add_argument("--batch_size", default=64, help="Batch size.")
     parser.add_argument("--learning_rate", default=0.01, help="Learning rate.")
     parser.add_argument("--epochs", default=100, help="Number of epochs.")
     parser.add_argument("--transforms", default="", help="Transforms to apply.")
-    parser.add_argument("--category", default="pose", help="Category to train on.")
+    parser.add_argument("--category", default="gender", help="Category to train on.")
     args = parser.parse_args(args)
 
 
@@ -108,7 +109,7 @@ def main(args):
     args.category = args.category if args.category else config.CATEGORY
 
     # Deep Learning stuff ---------------
-    seed_everything(42, workers=True)
+    seed_everything(random.randint(0, 100), workers=True)
     torch.set_float32_matmul_precision('medium')
 
     # Set up logging
@@ -124,7 +125,7 @@ def main(args):
 
     dataset = MixtecGenders(num_workers=1, batch_size=int(args.batch_size), input_transforms=args.transforms.split("_"), category=args.category)
 
-    model = m.MixtecModel(learning_rate=float(args.learning_rate), num_epoch=int(args.epochs), model_name=args.model)
+    model = m.MixtecModel(learning_rate=float(args.learning_rate), num_epoch=int(args.epochs), model_name=args.model, classification=args.category)
 
 
     # Train the model
