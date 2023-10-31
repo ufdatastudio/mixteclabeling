@@ -15,7 +15,7 @@ from torchcam.methods import SmoothGradCAMpp
 import io
 
 class MixtecModel(pl.LightningModule):
-    def __init__(self, learning_rate, num_classes=2, model_name="vgg16", num_epoch=1000, reference_dataloader=None):
+    def __init__(self, learning_rate, num_classes=2, model_name="vgg16", num_epoch=1000, classification='gender', reference_dataloader=None):
         super().__init__()
         self.save_hyperparameters()
         self.learning_rate = learning_rate
@@ -32,10 +32,12 @@ class MixtecModel(pl.LightningModule):
 
         ## TODO: Make relative to task at hand
         ## Relative loss function biasing (gender)
-        self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/386, 1/899]))
+        if classification == 'gender':
+            self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/386, 1/899]))
 
-        ## Relative loss function biasing (gender)
-        #self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/382, 1/903]))
+        ## Relative loss function biasing (pose)
+        elif classification == 'pose':
+            self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/903, 1/382]))
         
         if model_name == "vgg16":
             self.model.classifier[6] = nn.Linear(4096, 2)
