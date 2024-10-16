@@ -1,0 +1,21 @@
+name: name-date            # Name of your environment
+channels:
+  - pytorch
+  - conda-forge          # Channels to pull packages from
+  - defaults
+  - nvidia
+dependencies:
+  - python=3.9.10             # Python version
+  - pytorch=1.12.1            # PyTorch version
+  - torchvision=0.13.1        # Torchvision version
+  # - cudatoolkit=11.6          # CUDA version for GPU support
+  - tqdm
+  - matplotlib
+  - numpy=1.23
+  - pip                  # Include pip if you have pip-only dependencies
+  - pip:
+    - torchinfo
+
+  # If pip packages are required, add here
+  # - pip:
+  #   - scikit-learn==0.24.2   # Packages to be installed via pip

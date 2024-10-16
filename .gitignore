@@ -174,3 +174,6 @@ cython_debug/
 
 
 .DS_Store
+/.vscode
+/name_date_classification/name_date_images
+/name_date_classification/__pycache__
