@@ -13,3 +13,4 @@ dependencies:
       - torch
       - torchvision
       - torchinfo
+      - requests

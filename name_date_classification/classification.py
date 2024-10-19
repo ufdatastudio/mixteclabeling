@@ -54,8 +54,8 @@ if torch.cuda.is_available():
 
     # Setup directory paths
     # Setup directory paths to train and test images
-    train_dir = '/train'
-    test_dir = '/test'
+    train_dir = './name_date_images/train'
+    test_dir = './name_date_images/test'
 
 
     # Get automatic transforms from pretrained ViT weights
@@ -77,7 +77,7 @@ if torch.cuda.is_available():
         test_data = datasets.ImageFolder(test_dir, transform=transform)
 
         # Get class names
-        class_names = [name-date, year]
+        class_names = ['name-date', 'year']
 
         # Turn images into data loaders
         train_dataloader = DataLoader(
