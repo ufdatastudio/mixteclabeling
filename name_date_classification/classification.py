@@ -3,7 +3,6 @@
 import matplotlib.pyplot as plt
 import torchvision
 import torch
-import os
 
 # Import required modules from imported packages
 from torch import nn
@@ -12,72 +11,31 @@ from helper_functions import set_seeds
 from torch.utils.data import ConcatDataset, random_split
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
-from going_modular.going_modular import engine
+from going_modular.going_modular import engine, utils
 from helper_functions import plot_loss_curves
 from torchinfo import summary
 
 # Import function to make predictions on images and plot them 
 from going_modular.going_modular.predictions import pred_and_plot_image
 
+# Config Setup
+train_dir = './name_date_images/train'
+test_dir = './name_date_images/test'
 
-if torch.cuda.is_available():
-    device = "cuda" 
-    print("GPU Available for training")
-    
+# Get class names
+class_names = ['name_date', 'year']
 
-    # 1. Get pretrained weights for ViT-Base
-    pretrained_vit_weights = torchvision.models.ViT_B_16_Weights.DEFAULT 
-
-    # 2. Setup a ViT model instance with pretrained weights
-    pretrained_vit = torchvision.models.vit_b_16(weights=pretrained_vit_weights).to(device)
-
-    # 3. Freeze the base parameters
-    for parameter in pretrained_vit.parameters():
-        parameter.requires_grad = False
-        
-    # 4. Change the classifier head 
-    class_names = ['name_date','year']
-
-    set_seeds()
-    pretrained_vit.heads = nn.Linear(in_features=768, out_features=len(class_names)).to(device)
-
-    
-
-    # Print a summary using torchinfo (uncomment for actual output)
-    summary(model=pretrained_vit, 
-            input_size=(32, 3, 224, 224), # (batch_size, color_channels, height, width)
-            # col_names=["input_size"], # uncomment for smaller output
-            col_names=["input_size", "output_size", "num_params", "trainable"],
-            col_width=20,
-            row_settings=["var_names"]
-    )
-
-    # Setup directory paths
-    # Setup directory paths to train and test images
-    train_dir = './name_date_images/train'
-    test_dir = './name_date_images/test'
-
-
-    # Get automatic transforms from pretrained ViT weights
-    pretrained_vit_transforms = pretrained_vit_weights.transforms()
-    print(pretrained_vit_transforms)
-
-    NUM_WORKERS = 16
-
-    def create_dataloaders(
+def create_dataloaders(
         train_dir: str, 
         test_dir: str, 
         transform: transforms.Compose, 
         batch_size: int, 
-        num_workers: int=NUM_WORKERS
+        num_workers: int
     ):
 
         # Use ImageFolder to create dataset(s)
         train_data = datasets.ImageFolder(train_dir, transform=transform)
         test_data = datasets.ImageFolder(test_dir, transform=transform)
-
-        # Get class names
-        class_names = ['name_date', 'year']
 
         # Turn images into data loaders
         train_dataloader = DataLoader(
@@ -95,20 +53,80 @@ if torch.cuda.is_available():
             pin_memory=True,
         )
 
-        return train_dataloader, test_dataloader, class_names
+        return train_dataloader, test_dataloader
 
 
-    # Setup dataloaders
-    train_dataloader_pretrained, test_dataloader_pretrained, class_names = create_dataloaders(train_dir=train_dir,
-                                                                                                     test_dir=test_dir,
-                                                                                                     transform=pretrained_vit_transforms,
-                                                                                                     batch_size=32) # Could increase if we had more samples, such as here: https://arxiv.org/abs/2205.01580 (there are other improvements there too...)
-    # Create optimizer and loss function
+if __name__ == '__main__':
+
+    if torch.cuda.is_available():
+        device = "cuda" 
+        NUM_WORKERS = 16
+        print(f"GPU Available for training with {NUM_WORKERS} workers")
+
+    else:
+        device= "cpu"
+        print("⚠️ You are working in CPU mode. If you intended to use GPU then abort immediately by pressing ctrl + c")
+        NUM_WORKERS = 6
+        print(f"CPU based training with {NUM_WORKERS} workers")
+
+    # 1. Get pretrained weights for ViT-Base
+    print("1. Getting pretrained weights for ViT-Base")
+    pretrained_vit_weights = torchvision.models.ViT_B_16_Weights.DEFAULT 
+
+    # 2. Setup a ViT model instance with pretrained weights
+    print("2. Setting up a ViT model instance with pretrained weights ")
+    pretrained_vit = torchvision.models.vit_b_16(weights=pretrained_vit_weights).to(device)
+
+    # 3. Freeze the base parameters
+    print("3. Freezing the base parameters ")
+    for parameter in pretrained_vit.parameters():
+        parameter.requires_grad = False
+        
+
+    # 4. Setting Random Seeds
+    print("4. Setting Random Seeds")
+    set_seeds()
+
+    # 5. Setting the in_features and out_features for vit
+    print("5. Setting the in_features and out_features for vit")
+    pretrained_vit.heads = nn.Linear(in_features=768, out_features=len(class_names)).to(device)
+
+
+    # 6. Print a summary using torchinfo
+    print("6. Printing a summary using torchinfo")
+    summary(model=pretrained_vit, 
+            input_size=(32, 3, 224, 224), # (batch_size, color_channels, height, width)
+            # col_names=["input_size"], # uncomment for smaller output
+            col_names=["input_size", "output_size", "num_params", "trainable"],
+            col_width=20,
+            row_settings=["var_names"]
+    )
+
+    # 7. Setup directory paths
+    # Setup directory paths to train and test images
+    print(f"7. Setting up train and test directories, train:{train_dir}, test:{test_dir} ")
+
+
+    # 8. Get automatic transforms from pretrained ViT weights
+    print("8. Getting automatic transforms from pretrained ViT weights")
+    pretrained_vit_transforms = pretrained_vit_weights.transforms()
+
+    print("Pretrained VIT transforms: ")
+    print(pretrained_vit_transforms)
+
+    # 9. Setup dataloaders
+        # Could increase batch size if we had more samples, such as here: https://arxiv.org/abs/2205.01580 (there are other improvements there too...)
+    print("9. Setting up data loaders")
+    train_dataloader_pretrained, test_dataloader_pretrained = create_dataloaders(train_dir=train_dir, test_dir=test_dir, transform=pretrained_vit_transforms, batch_size=32, num_workers=NUM_WORKERS) 
+
+    # 10. Create optimizer and loss function
+    print("10. Setting up Adam Optimiser and CrossEntropyLoss functions")
     optimizer = torch.optim.Adam(params=pretrained_vit.parameters(), 
                                 lr=1e-3)
     loss_fn = torch.nn.CrossEntropyLoss()
 
-    # Train the classifier head of the pretrained ViT feature extractor model
+    # 11. Train the classifier head of the pretrained ViT feature extractor model
+    print("11. Beginning Model Training, This may take a while....")
     set_seeds()
     pretrained_vit_results = engine.train(model=pretrained_vit,
                                         train_dataloader=train_dataloader_pretrained,
@@ -118,8 +136,14 @@ if torch.cuda.is_available():
                                         epochs=10,
                                         device=device)   
 
-    plot_loss_curves(pretrained_vit_results)   
+    # 12. Plotting Loss Curves
+    print("12. Plotting Loss Curves")
+    plot_loss_curves(pretrained_vit_results) 
 
-else:
-    print("Classifier cannot be trained as no GPUs were found on this system.") 
+    # 13. Save the trained Model
+    # Save the model with help from utils.py
+    print("Saving the model to models/namedate_year_classifier_vit.pth")
+    utils.save_model(model=pretrained_vit,
+                    target_dir="models",
+                    model_name="namedate_year_classifier_vit.pth")  
 

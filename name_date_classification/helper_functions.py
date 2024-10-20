@@ -70,10 +70,10 @@ def print_train_time(start, end, device=None):
     print(f"\nTrain time on {device}: {total_time:.3f} seconds")
     return total_time
 
+import matplotlib.pyplot as plt
 
-# Plot loss curves of a model
-def plot_loss_curves(results):
-    """Plots training curves of a results dictionary.
+def plot_loss_curves(results, filename_prefix="loss_curves"):
+    """Plots training curves of a results dictionary and saves them to files.
 
     Args:
         results (dict): dictionary containing list of values, e.g.
@@ -81,6 +81,7 @@ def plot_loss_curves(results):
              "train_acc": [...],
              "test_loss": [...],
              "test_acc": [...]}
+        filename_prefix (str): prefix for the output files.
     """
     loss = results["train_loss"]
     test_loss = results["test_loss"]
@@ -100,6 +101,12 @@ def plot_loss_curves(results):
     plt.xlabel("Epochs")
     plt.legend()
 
+    # Save loss plot
+    plt.savefig(f"{filename_prefix}_loss.png")
+    
+    # Clear the figure for the next plot
+    plt.clf()
+
     # Plot accuracy
     plt.subplot(1, 2, 2)
     plt.plot(epochs, accuracy, label="train_accuracy")
@@ -107,6 +114,12 @@ def plot_loss_curves(results):
     plt.title("Accuracy")
     plt.xlabel("Epochs")
     plt.legend()
+
+    # Save accuracy plot
+    plt.savefig(f"{filename_prefix}_accuracy.png")
+
+    # Close the figure
+    plt.close()
 
 
 # Pred and plot image function from notebook 04
