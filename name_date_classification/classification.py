@@ -19,8 +19,9 @@ from torchinfo import summary
 from going_modular.going_modular.predictions import pred_and_plot_image
 
 # Config Setup
-train_dir = './name_date_images/train'
-test_dir = './name_date_images/test'
+pwd = '/home/gsalunke/toblue/mixtec/mixteclabeling/name_date_classification'
+train_dir = f'{pwd}/name_date_images/train'
+test_dir = f'{pwd}/name_date_images/test'
 
 # Get class names
 class_names = ['name_date', 'year']

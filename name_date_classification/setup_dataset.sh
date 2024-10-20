@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # Step 1: Clone the repository
+module load git
+git lfs install
 echo "Cloning from Huggingface, Authentication required..."
 git clone https://huggingface.co/datasets/ufdatastudio/mixtec-zouche-nuttall-british-museum
 
