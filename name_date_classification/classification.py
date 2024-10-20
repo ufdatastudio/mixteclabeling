@@ -62,7 +62,7 @@ if torch.cuda.is_available():
     pretrained_vit_transforms = pretrained_vit_weights.transforms()
     print(pretrained_vit_transforms)
 
-    NUM_WORKERS = os.cpu_count()
+    NUM_WORKERS = 16
 
     def create_dataloaders(
         train_dir: str, 
@@ -77,7 +77,7 @@ if torch.cuda.is_available():
         test_data = datasets.ImageFolder(test_dir, transform=transform)
 
         # Get class names
-        class_names = ['name-date', 'year']
+        class_names = ['name_date', 'year']
 
         # Turn images into data loaders
         train_dataloader = DataLoader(
