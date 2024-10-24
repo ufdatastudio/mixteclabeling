@@ -18,9 +18,9 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # Predict on a target image with a target model
 # Function created in: https://www.learnpytorch.io/06_pytorch_transfer_learning/#6-make-predictions-on-images-from-the-test-set
 def pred_and_plot_image(
-    model: torch.nn.Module,
     class_names: List[str],
     image_path: str,
+    model: torch.nn.Module = None,
     image_size: Tuple[int, int] = (224, 224),
     transform: torchvision.transforms = None,
     device: torch.device = device,
@@ -36,8 +36,14 @@ def pred_and_plot_image(
         device (torch.device, optional): Target device to perform prediction on. Defaults to device.
     """
 
+    if model is None:
+        raise ValueError("Model must be provided or model_path must be specified.")
+
+    # Ensure the model is on the target device
+    model.to(device)
+
     # Open image
-    img = Image.open(image_path)
+    img = Image.open(image_path).convert("RGB")
 
     # Create transformation for image (if one doesn't exist)
     if transform is not None:
@@ -80,4 +86,6 @@ def pred_and_plot_image(
         f"Pred: {class_names[target_image_pred_label]} | Prob: {target_image_pred_probs.max():.3f}"
     )
     plt.axis(False)
+
+    return model
 

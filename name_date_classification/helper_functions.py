@@ -128,6 +128,7 @@ from typing import List
 import torchvision
 
 
+
 def pred_and_plot_image(
     model: torch.nn.Module = None,
     model_path: str = None,

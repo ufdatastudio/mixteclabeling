@@ -71,30 +71,30 @@ if __name__ == '__main__':
         NUM_WORKERS = 6
         print(f"CPU based training with {NUM_WORKERS} workers")
 
-    # 🏋🏻 1. Get pretrained weights for ViT-Base
+    #1.🏋🏻 Get pretrained weights for ViT-Base
     print("🏋🏻 1. Getting pretrained weights for ViT-Base")
     pretrained_vit_weights = torchvision.models.ViT_B_16_Weights.DEFAULT 
 
-    # 🏋🏻 2. Setup a ViT model instance with pretrained weights
+    #2.🏋🏻 Setup a ViT model instance with pretrained weights
     print("🏋🏻 2. Setting up a ViT model instance with pretrained weights ")
     pretrained_vit = torchvision.models.vit_b_16(weights=pretrained_vit_weights).to(device)
 
-    # ❄️ 3. Freeze the base parameters
+    #3. ❄️ Freeze the base parameters
     print("❄️ 3. Freezing the base parameters ")
     for parameter in pretrained_vit.parameters():
         parameter.requires_grad = False
         
 
-    # 🔀 4. Setting Random Seeds
+    #4. 🔀 Setting Random Seeds
     print("🔀 4. Setting Random Seeds")
     set_seeds()
 
-    # ⚙️ 5. Setting the in_features and out_features for vit
+    #5. ⚙️ Setting the in_features and out_features for vit
     print("⚙️ 5. Setting the in_features and out_features for vit")
     pretrained_vit.heads = nn.Linear(in_features=768, out_features=len(class_names)).to(device)
 
 
-    # 🖨️ 6. Print a summary using torchinfo
+    #6. 🖨️ Print a summary using torchinfo
     print("🖨️  6. Printing a summary using torchinfo")
     summary(model=pretrained_vit, 
             input_size=(32, 3, 224, 224), # (batch_size, color_channels, height, width)
@@ -104,12 +104,12 @@ if __name__ == '__main__':
             row_settings=["var_names"]
     )
 
-    # 📂 7. Setup directory paths
+    #7. 📂 Setup directory paths
     # Setup directory paths to train and test images
     print(f"📂 7. Setting up train and test directories, train:{train_dir}, test:{test_dir} ")
 
 
-    # 🏋🏻 8. Get automatic transforms from pretrained ViT weights
+    #8. 🏋🏻 Get automatic transforms from pretrained ViT weights
     print("🏋🏻 8. Getting automatic transforms from pretrained ViT weights")
     pretrained_vit_transforms = pretrained_vit_weights.transforms()
 

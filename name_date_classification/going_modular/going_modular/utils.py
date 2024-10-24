@@ -4,6 +4,12 @@ Contains various utility functions for PyTorch model training and saving.
 import torch
 from pathlib import Path
 
+def load_model(model_path, device):
+    model = torch.load(model_path, map_location=device)
+    model.eval()  # Set the model to evaluation mode
+    return model
+
+
 def save_model(model: torch.nn.Module,
                target_dir: str,
                model_name: str):
