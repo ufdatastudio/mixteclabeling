@@ -15,7 +15,6 @@ import requests
 import os
 
 
-
 # Plot linear data or training and test and predictions (optional)
 def plot_predictions(
     train_data, train_labels, test_data, test_labels, predictions=None
@@ -89,7 +88,7 @@ def plot_loss_curves(results, filename_prefix="loss_curves"):
     accuracy = results["train_acc"]
     test_accuracy = results["test_acc"]
 
-    epochs = range(len(results["train_loss"]))
+    epochs = range(1, len(results["train_loss"])+1)
 
     plt.figure(figsize=(15, 7))
 
@@ -100,6 +99,8 @@ def plot_loss_curves(results, filename_prefix="loss_curves"):
     plt.title("Loss")
     plt.xlabel("Epochs")
     plt.legend()
+    # Set Y-axis to start at 0
+    plt.ylim(0, max(max(loss), max(test_loss)) * 1.1)
 
     # Save loss plot
     plt.savefig(f"{filename_prefix}_loss.png")
@@ -114,6 +115,7 @@ def plot_loss_curves(results, filename_prefix="loss_curves"):
     plt.title("Accuracy")
     plt.xlabel("Epochs")
     plt.legend()
+    plt.ylim(0, 1)
 
     # Save accuracy plot
     plt.savefig(f"{filename_prefix}_accuracy.png")
