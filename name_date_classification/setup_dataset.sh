@@ -6,7 +6,7 @@ git lfs install
 echo "Cloning from Huggingface, Authentication required..."
 git clone https://huggingface.co/datasets/ufdatastudio/mixtec-zouche-nuttall-british-museum
 
-# Step 2: Rename the folder to "name_date_images"
+# Step 2: Rename the folder to "sign_images"
 new_folder_name="sign_images"
 mv mixtec-zouche-nuttall-british-museum "$new_folder_name"
 
@@ -25,6 +25,15 @@ fi
 
 # Step 6: Delete the metadata.csv file (check if it exists)
 rm -f metadata.csv
+
+# Step 6.5: Run the Python script to augment images with random rotations
+python3 ../augment_images.py . # Ensure this script is named appropriately
+
+# Check if the Python command was successful
+if [ $? -ne 0 ]; then
+  echo "Python script failed. Exiting..."
+  exit 1
+fi
 
 # Step 7: Define an array of keywords to use for folder creation and file categorization
 keywords=(jaguar movement eagle flint flower wind rain dog rabbit reed grass crocodile serpent monkey deer vulture house death water lizard)

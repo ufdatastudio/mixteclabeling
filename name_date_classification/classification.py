@@ -138,7 +138,7 @@ if __name__ == '__main__':
                                         test_dataloader=test_dataloader_pretrained,
                                         optimizer=optimizer,
                                         loss_fn=loss_fn,
-                                        epochs=10,
+                                        epochs=25,
                                         device=device)   
 
     # 📉 12. Plotting Loss Curves
