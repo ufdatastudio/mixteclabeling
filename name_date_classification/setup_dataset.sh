@@ -26,8 +26,6 @@ fi
 # Step 6: Delete the metadata.csv file (check if it exists)
 rm -f metadata.csv
 
-# Step 6.5: Run the Python script to augment images with random rotations
-python3 ../augment_images.py . # Ensure this script is named appropriately
 
 # Check if the Python command was successful
 if [ $? -ne 0 ]; then
@@ -44,7 +42,7 @@ for keyword in "${keywords[@]}"; do
 done
 
 # Set the percentage of files to go into the train set
-train_percentage=75  # Replace with the desired percentage
+train_percentage=70  # Replace with the desired percentage
 
 # Function to randomly shuffle files
 random_shuffle() {
@@ -86,3 +84,8 @@ for keyword in "${keywords[@]}"; do
 done
 
 echo "Dataset setup and random splitting completed successfully!"
+
+echo "Running Python Script to perform augmentation by random rotation"
+
+# Step 9.5: Run the Python script to augment images with random rotations
+python3 ../augment_images.py . # Ensure this script is named appropriately
