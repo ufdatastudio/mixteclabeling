@@ -21,12 +21,13 @@ from going_modular.going_modular.predictions import pred_and_plot_image
 
 # Config Setup
 # /home/gsalunke/toblue/mixtec/mixteclabeling
-pwd = '/name_date_classification'
-train_dir = f'{pwd}/name_date_images/train'
-test_dir = f'{pwd}/name_date_images/test'
+
+train_dir = f'./sign_images/train'
+test_dir = f'./sign_images/test'
 
 # Get class names
-class_names = ['name_date', 'year']
+class_names = ["jaguar", "movement", "eagle", "flint", "flower", "wind", "rain", "dog", "rabbit", "reed", "grass", "crocodile", "serpent", "monkey", "deer", "vulture", "house", "death", "water", "lizard"]
+
 
 def create_dataloaders(
         train_dir: str, 
@@ -68,35 +69,36 @@ if __name__ == '__main__':
 
     else:
         device= "cpu"
-        print("⚠️ You are working in CPU mode. If you intended to use GPU then abort immediately by pressing ctrl + c")
+        print("Warning ⚠️: You are working in CPU mode. If you intended to use GPU then abort immediately by pressing ctrl + c")
         NUM_WORKERS = 6
         print(f"CPU based training with {NUM_WORKERS} workers")
 
     #1.🏋🏻 Get pretrained weights for ViT-Base
-    print("🏋🏻 1. Getting pretrained weights for ViT-Base")
+    print("1. Getting pretrained weights for ViT-Base")
     pretrained_vit_weights = torchvision.models.ViT_B_16_Weights.DEFAULT 
 
     #2.🏋🏻 Setup a ViT model instance with pretrained weights
-    print("🏋🏻 2. Setting up a ViT model instance with pretrained weights ")
+    print("2. Setting up a ViT model instance with pretrained weights ")
     pretrained_vit = torchvision.models.vit_b_16(weights=pretrained_vit_weights).to(device)
 
     #3. ❄️ Freeze the base parameters
-    print("❄️ 3. Freezing the base parameters ")
+    print("3. Freezing the base parameters ")
     for parameter in pretrained_vit.parameters():
         parameter.requires_grad = False
         
 
     #4. 🔀 Setting Random Seeds
-    print("🔀 4. Setting Random Seeds")
+    print("4. Setting Random Seeds")
     set_seeds()
 
     #5. ⚙️ Setting the in_features and out_features for vit
-    print("⚙️ 5. Setting the in_features and out_features for vit")
+    print("5. Setting the in_features and out_features for vit")
+    # in_feature = 16x16 x3 
     pretrained_vit.heads = nn.Linear(in_features=768, out_features=len(class_names)).to(device)
 
 
     #6. 🖨️ Print a summary using torchinfo
-    print("🖨️  6. Printing a summary using torchinfo")
+    print("6. Printing a summary using torchinfo")
     summary(model=pretrained_vit, 
             input_size=(32, 3, 224, 224), # (batch_size, color_channels, height, width)
             # col_names=["input_size"], # uncomment for smaller output
@@ -107,11 +109,11 @@ if __name__ == '__main__':
 
     #7. 📂 Setup directory paths
     # Setup directory paths to train and test images
-    print(f"📂 7. Setting up train and test directories, train:{train_dir}, test:{test_dir} ")
+    print(f"7. Setting up train and test directories, train:{train_dir}, test:{test_dir} ")
 
 
     #8. 🏋🏻 Get automatic transforms from pretrained ViT weights
-    print("🏋🏻 8. Getting automatic transforms from pretrained ViT weights")
+    print("8. Getting automatic transforms from pretrained ViT weights")
     pretrained_vit_transforms = pretrained_vit_weights.transforms()
 
     print("Pretrained VIT transforms: ")
@@ -119,11 +121,11 @@ if __name__ == '__main__':
 
     # 🧑🏻‍💻 9. Setup dataloaders
         # Could increase batch size if we had more samples, such as here: https://arxiv.org/abs/2205.01580 (there are other improvements there too...)
-    print("🧑🏻‍💻 9. Setting up data loaders")
+    print("9. Setting up data loaders")
     train_dataloader_pretrained, test_dataloader_pretrained = create_dataloaders(train_dir=train_dir, test_dir=test_dir, transform=pretrained_vit_transforms, batch_size=32, num_workers=NUM_WORKERS) 
 
     # ⨐ 10. Create optimizer and loss function
-    print("⨐ 10. Setting up Adam Optimiser and CrossEntropyLoss functions")
+    print("10. Setting up Adam Optimiser and CrossEntropyLoss functions")
     optimizer = torch.optim.Adam(params=pretrained_vit.parameters(), 
                                 lr=1e-3)
     loss_fn = torch.nn.CrossEntropyLoss()
@@ -140,7 +142,7 @@ if __name__ == '__main__':
                                         device=device)   
 
     # 📉 12. Plotting Loss Curves
-    print("📉 12. Plotting Loss Curves")
+    print("12. Plotting Loss Curves")
     plot_loss_curves(pretrained_vit_results) 
 
 
@@ -151,11 +153,11 @@ if __name__ == '__main__':
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # Format: YYYYMMDD_HHMMSS
 
     # Construct the model name with the timestamp
-    model_name = f"namedate_year_classifier_vit_{timestamp}.pth"
+    model_name = f"sign_classifier_vit_{timestamp}.pth"
     
     utils.save_model(model=pretrained_vit,
                     target_dir="models",
                     model_name=model_name) 
      
-    print(f" ✅ Model saved to models/{model_name}")
+    print(f"Model saved to models/{model_name} ✅")
 

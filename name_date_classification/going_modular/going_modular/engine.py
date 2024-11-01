@@ -164,7 +164,6 @@ def train(model: torch.nn.Module,
     # Make sure model on target device
     model.to(device)
 
-    print(" 🐞: Model training has started....")
     # Loop through training and testing steps for a number of epochs
     for epoch in tqdm(range(epochs)):
         train_loss, train_acc = train_step(model=model,

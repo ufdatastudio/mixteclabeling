@@ -6,9 +6,8 @@ git lfs install
 echo "Cloning from Huggingface, Authentication required..."
 git clone https://huggingface.co/datasets/ufdatastudio/mixtec-zouche-nuttall-british-museum
 
-
 # Step 2: Rename the folder to "name_date_images"
-new_folder_name="name_date_images"
+new_folder_name="sign_images"
 mv mixtec-zouche-nuttall-british-museum "$new_folder_name"
 
 # Step 3: Change into the new directory
@@ -27,13 +26,18 @@ fi
 # Step 6: Delete the metadata.csv file (check if it exists)
 rm -f metadata.csv
 
-# Step 7: Create 'train' and 'test' directories with 'date' and 'name' subdirectories
-mkdir -p train/name_date train/year test/name_date test/year
+# Step 7: Define an array of keywords to use for folder creation and file categorization
+keywords=(jaguar movement eagle flint flower wind rain dog rabbit reed grass crocodile serpent monkey deer vulture house death water lizard)
+
+# Step 8: Create directories for each keyword inside train and test directories
+for keyword in "${keywords[@]}"; do
+  mkdir -p "train/$keyword" "test/$keyword"
+done
 
 # Set the percentage of files to go into the train set
 train_percentage=75  # Replace with the desired percentage
 
-# Step 8: Function to randomly shuffle files using available commands
+# Function to randomly shuffle files
 random_shuffle() {
   if command -v shuf >/dev/null 2>&1; then
     # If shuf is available, use it
@@ -46,41 +50,30 @@ random_shuffle() {
   fi
 }
 
-# Step 9: Split files into 'train' and 'test' sets randomly
-# Find all files with "year" in the filename and extension ".png"
-year_files=(*year*.png)
-num_year_files=${#year_files[@]}
-train_year_count=$((num_year_files * train_percentage / 100))
-
-# Randomly sort and move files with "year" to "train/date" and "test/date"
-random_shuffle "${year_files[@]}" | {
-  i=0
-  while read -r file; do
-    if [ $i -lt $train_year_count ]; then
-      mv "$file" train/year/
-    else
-      mv "$file" test/year/
-    fi
-    ((i++))
-  done
-}
-
-# Find all remaining .png files (those without "year" in the filename)
-remaining_files=(*.png)
-num_remaining_files=${#remaining_files[@]}
-train_remaining_count=$((num_remaining_files * train_percentage / 100))
-
-# Randomly sort and move remaining files to "train/name" and "test/name"
-random_shuffle "${remaining_files[@]}" | {
-  i=0
-  while read -r file; do
-    if [ $i -lt $train_remaining_count ]; then
-      mv "$file" train/name_date/
-    else
-      mv "$file" test/name_date/
-    fi
-    ((i++))
-  done
-}
+# Step 9: Categorize files based on keywords and split into train and test
+for keyword in "${keywords[@]}"; do
+  # Find files containing the keyword
+  files=(*"$keyword"*.png)
+  num_files=${#files[@]}
+  
+  if [ $num_files -eq 0 ]; then
+    continue  # Skip if no files match the keyword
+  fi
+  
+  train_count=$((num_files * train_percentage / 100))
+  
+  # Randomly shuffle and split files into train and test sets
+  random_shuffle "${files[@]}" | {
+    i=0
+    while read -r file; do
+      if [ $i -lt $train_count ]; then
+        mv "$file" "train/$keyword/"
+      else
+        mv "$file" "test/$keyword/"
+      fi
+      ((i++))
+    done
+  }
+done
 
 echo "Dataset setup and random splitting completed successfully!"
