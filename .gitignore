@@ -180,3 +180,6 @@ cython_debug/
 
 name_date_classification/*.png
 name_date_classification/models
+name_date_classification/confusion_matrix
+
+/name_date_classification/sign_images

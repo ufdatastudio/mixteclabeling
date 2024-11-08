@@ -8,8 +8,10 @@ dependencies:
   - tqdm
   - numpy
   - matplotlib
-  - scikit-learn  
+  - scikit-learn
+  - seaborn
   - pip
+
   - pip:
       - torch
       - torchvision
