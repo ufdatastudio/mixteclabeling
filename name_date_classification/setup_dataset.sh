@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+#!/bin/bash
+
 # Step 1: Clone the repository
 module load git
 git lfs install
@@ -26,12 +29,6 @@ fi
 # Step 6: Delete the metadata.csv file (check if it exists)
 rm -f metadata.csv
 
-
-# Check if the Python command was successful
-if [ $? -ne 0 ]; then
-  echo "Python script failed. Exiting..."
-  exit 1
-fi
 
 # Step 7: Define an array of keywords to use for folder creation and file categorization
 keywords=(jaguar movement eagle flint flower wind rain dog rabbit reed grass crocodile serpent monkey deer vulture house death water lizard)
@@ -87,5 +84,15 @@ echo "Dataset setup and random splitting completed successfully!"
 
 echo "Running Python Script to perform augmentation by random rotation"
 
-# Step 9.5: Run the Python script to augment images with random rotations
-python3 ../augment_images.py . # Ensure this script is named appropriately
+# Step 10: Run the Python script to augment images with random rotations and color jitter
+
+# Initialize conda
+if command -v mamba &> /dev/null; then
+    # Mamba is available, so we initialize it
+    echo "Mamba is available. Initializing mamba..."
+    mamba run --live-stream -n name-date python augment_images.py . 
+else
+    # Fallback to conda if mamba is not available
+    echo "Mamba is not available. Initializing conda..."
+    conda run --live-stream -n name-date python ../augment_images.py . 
+fi
