@@ -8,6 +8,7 @@ dependencies:
   - tqdm
   - numpy
   - matplotlib
+  - scikit-learn  
   - pip
   - pip:
       - torch
