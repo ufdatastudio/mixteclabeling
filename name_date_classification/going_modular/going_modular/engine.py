@@ -193,15 +193,13 @@ def train(model: torch.nn.Module,
 
         # Compute and display the confusion matrix
         cm = confusion_matrix(all_labels, all_preds)
-        print(f"Confusion Matrix for Epoch {epoch + 1}:\n")
-        print(cm)  # Print the confusion matrix as text
         plt.figure(figsize=(10, 8))
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
         plt.xlabel('Predicted Labels')
         plt.ylabel('True Labels')
         plt.title(f'Confusion Matrix for Epoch {epoch + 1}')
         # Save the figure as an image
-        image_path = f"/confusion_matrix/epoch_{epoch + 1}.png"
+        image_path = f"confusion_matrix/epoch_{epoch + 1}.png"
         plt.savefig(image_path)
         plt.close()  # Close the plot to free memory
 
