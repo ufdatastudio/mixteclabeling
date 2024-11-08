@@ -1,8 +1,5 @@
 #!/bin/bash
 
-
-#!/bin/bash
-
 # Step 1: Clone the repository
 module load git
 git lfs install
@@ -28,7 +25,6 @@ fi
 
 # Step 6: Delete the metadata.csv file (check if it exists)
 rm -f metadata.csv
-
 
 # Step 7: Define an array of keywords to use for folder creation and file categorization
 keywords=(jaguar movement eagle flint flower wind rain dog rabbit reed grass crocodile serpent monkey deer vulture house death water lizard)
@@ -87,10 +83,11 @@ echo "Running Python Script to perform augmentation by random rotation"
 # Step 10: Run the Python script to augment images with random rotations and color jitter
 
 # Initialize conda
+module load mamba
 if command -v mamba &> /dev/null; then
     # Mamba is available, so we initialize it
     echo "Mamba is available. Initializing mamba..."
-    mamba run --live-stream -n name-date python augment_images.py . 
+    mamba run --live-stream -n name-date python ../augment_images.py . 
 else
     # Fallback to conda if mamba is not available
     echo "Mamba is not available. Initializing conda..."

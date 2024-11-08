@@ -28,7 +28,6 @@ test_dir = f'./sign_images/test'
 # Get class names
 class_names = ["jaguar", "movement", "eagle", "flint", "flower", "wind", "rain", "dog", "rabbit", "reed", "grass", "crocodile", "serpent", "monkey", "deer", "vulture", "house", "death", "water", "lizard"]
 
-
 def create_dataloaders(
         train_dir: str, 
         test_dir: str, 
@@ -138,8 +137,9 @@ if __name__ == '__main__':
                                         test_dataloader=test_dataloader_pretrained,
                                         optimizer=optimizer,
                                         loss_fn=loss_fn,
-                                        epochs=25,
-                                        device=device)   
+                                        epochs=10,
+                                        device=device,
+                                        class_names=class_names)   
 
     # 📉 12. Plotting Loss Curves
     print("12. Plotting Loss Curves")
@@ -160,4 +160,3 @@ if __name__ == '__main__':
                     model_name=model_name) 
      
     print(f"Model saved to models/{model_name} ✅")
-

@@ -2,9 +2,12 @@
 Contains functions for training and testing a PyTorch model.
 """
 import torch
-
 from tqdm.auto import tqdm
 from typing import Dict, List, Tuple
+from sklearn.metrics import confusion_matrix
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def train_step(model: torch.nn.Module, 
                dataloader: torch.utils.data.DataLoader, 
@@ -70,28 +73,20 @@ def test_step(model: torch.nn.Module,
               dataloader: torch.utils.data.DataLoader, 
               loss_fn: torch.nn.Module,
               device: torch.device) -> Tuple[float, float]:
-    """Tests a PyTorch model for a single epoch.
+    
+    """Tests a PyTorch model for a single epoch and returns
+       predictions and labels for confusion matrix."""
+    
 
-    Turns a target PyTorch model to "eval" mode and then performs
-    a forward pass on a testing dataset.
-
-    Args:
-    model: A PyTorch model to be tested.
-    dataloader: A DataLoader instance for the model to be tested on.
-    loss_fn: A PyTorch loss function to calculate loss on the test data.
-    device: A target device to compute on (e.g. "cuda" or "cpu").
-
-    Returns:
-    A tuple of testing loss and testing accuracy metrics.
-    In the form (test_loss, test_accuracy). For example:
-
-    (0.0223, 0.8985)
-    """
     # Put model in eval mode
     model.eval() 
 
     # Setup test loss and test accuracy values
     test_loss, test_acc = 0, 0
+
+    # To store all predictions and labels for confusion matrix
+    all_preds = []
+    all_labels = []
 
     # Turn on inference context manager
     with torch.inference_mode():
@@ -111,10 +106,14 @@ def test_step(model: torch.nn.Module,
             test_pred_labels = test_pred_logits.argmax(dim=1)
             test_acc += ((test_pred_labels == y).sum().item()/len(test_pred_labels))
 
+            # Store predictions and labels for confusion matrix
+            all_preds.extend(test_pred_labels.cpu().numpy())
+            all_labels.extend(y.cpu().numpy())
+
     # Adjust metrics to get average loss and accuracy per batch 
     test_loss = test_loss / len(dataloader)
     test_acc = test_acc / len(dataloader)
-    return test_loss, test_acc
+    return test_loss, test_acc, all_preds, all_labels
 
 def train(model: torch.nn.Module, 
           train_dataloader: torch.utils.data.DataLoader, 
@@ -122,7 +121,8 @@ def train(model: torch.nn.Module,
           optimizer: torch.optim.Optimizer,
           loss_fn: torch.nn.Module,
           epochs: int,
-          device: torch.device) -> Dict[str, List]:
+          device: torch.device,
+          class_names) -> Dict[str, List]:
     """Trains and tests a PyTorch model.
 
     Passes a target PyTorch models through train_step() and test_step()
@@ -171,10 +171,10 @@ def train(model: torch.nn.Module,
                                           loss_fn=loss_fn,
                                           optimizer=optimizer,
                                           device=device)
-        test_loss, test_acc = test_step(model=model,
-          dataloader=test_dataloader,
-          loss_fn=loss_fn,
-          device=device)
+        test_loss, test_acc, all_preds, all_labels = test_step(model=model,
+                                                               dataloader=test_dataloader,
+                                                               loss_fn=loss_fn,
+                                                               device=device)
 
         # Print out what's happening
         print(
@@ -190,6 +190,20 @@ def train(model: torch.nn.Module,
         results["train_acc"].append(train_acc)
         results["test_loss"].append(test_loss)
         results["test_acc"].append(test_acc)
+
+        # Compute and display the confusion matrix
+        cm = confusion_matrix(all_labels, all_preds)
+        print(f"Confusion Matrix for Epoch {epoch + 1}:\n")
+        print(cm)  # Print the confusion matrix as text
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
+        plt.xlabel('Predicted Labels')
+        plt.ylabel('True Labels')
+        plt.title(f'Confusion Matrix for Epoch {epoch + 1}')
+        # Save the figure as an image
+        image_path = f"/confusion_matrix/epoch_{epoch + 1}.png"
+        plt.savefig(image_path)
+        plt.close()  # Close the plot to free memory
 
     # Return the filled results at the end of the epochs
     return results
