@@ -42,7 +42,7 @@ def apply_random_mask(img):
     # Draw the mask (black rectangle)
     draw.rectangle(
         [(top_left_x, top_left_y), (top_left_x + mask_width, top_left_y + mask_height)],
-        fill="black"
+        fill="white"
     )
     
     return img_with_mask
