@@ -7,7 +7,6 @@ from torchmetrics import MetricCollection, Accuracy, Precision, Recall, F1Score
 from torchvision.models import get_model, get_model_weights
 from torch import nn, optim
 from datetime import datetime
-from helper_functions import set_seeds, plot_loss_curves
 from going_modular.going_modular import utils
 
 # Define the LightningModule for the ViT-based model
@@ -47,11 +46,9 @@ class MixtecNameDateYear(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        print("**** In training ******")
         X, y = batch
         preds = self(X)
         loss = self.loss_fn(preds, y)
-        print("^^^^^^^^^^^^^", loss, "_____", self.loss_fn(preds, y))
         self.train_metrics.update(preds.argmax(dim=1), y)
         self.log("train_loss", loss, on_step=False, on_epoch=True) 
         
@@ -60,9 +57,6 @@ class MixtecNameDateYear(pl.LightningModule):
         # train_prec = self.train_metrics["train_prec"].compute()
         # train_rec = self.train_metrics["train_rec"].compute()
         # train_f1 = self.train_metrics["train_f1"].compute()
-        
-        # print(f"Training - Loss: {loss:.4f}, Accuracy: {train_acc:.4f}, Precision: {train_prec:.4f}, Recall: {train_rec:.4f}, F1 Score: {train_f1:.4f}")
-
         
         return loss
 
@@ -78,7 +72,6 @@ class MixtecNameDateYear(pl.LightningModule):
         return self.loss_fn(preds, y)
 
     def test_step(self, batch, batch_idx):
-        print("**** In testingg ******")
         X, y = batch
         preds = self(X)
         loss = self.loss_fn(preds, y)
@@ -108,52 +101,3 @@ class MixtecNameDateYear(pl.LightningModule):
         return self.optimizer
 
 
-# def create_dataloaders(train_dir, test_dir, batch_size, num_workers):
-#     # Define image transformations
-#     transform = get_model_weights("vit_b_16").DEFAULT.transforms()
-
-#     # Create datasets
-#     train_data = datasets.ImageFolder(train_dir, transform=transform)
-#     test_data = datasets.ImageFolder(test_dir, transform=transform)
-
-#     # Create data loaders
-#     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
-#     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True)
-#     return train_loader, test_loader
-
-
-# def main():
-#     # Set device and num_workers
-#     if torch.cuda.is_available():
-#         device = "cuda"
-#         num_workers = 16
-#     else:
-#         device = "cpu"
-#         num_workers = 6
-
-#     # Set seeds
-#     set_seeds()
-
-#     # Create data loaders
-#     train_loader, test_loader = create_dataloaders(train_dir, test_dir, batch_size=32, num_workers=num_workers)
-
-#     # Instantiate the model
-#     model = MixtecModel()
-
-#     # Train the model
-#     trainer = pl.Trainer(
-#         max_epochs=10,
-#         accelerator=device,
-#         log_every_n_steps=10,
-#     )
-#     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=test_loader)
-
-#     # Save the model
-#     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-#     model_name = f"namedate_year_classifier_vit_{timestamp}.pth"
-#     utils.save_model(model=model, target_dir="models", model_name=model_name)
-#     print(f"✅ Model saved to models/{model_name}")
-
-
-# if __name__ == "__main__":
-#     main()
