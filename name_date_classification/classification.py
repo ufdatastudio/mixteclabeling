@@ -26,7 +26,7 @@ train_dir = f'./sign_images/train'
 test_dir = f'./sign_images/test'
 
 # Get class names
-class_names = ["jaguar", "movement", "eagle", "flint", "flower", "wind", "rain", "dog", "rabbit", "reed", "grass", "crocodile", "serpent", "monkey", "deer", "vulture", "house", "death", "water", "lizard"]
+class_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12","13","15"]
 
 def create_dataloaders(
         train_dir: str, 
