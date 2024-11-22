@@ -79,23 +79,23 @@ class MixtecNameDateYear(pl.LightningModule):
         self.log("test_loss", loss, on_step=False, on_epoch=True)
         self.log_dict(self.test_metrics, on_step=False, on_epoch=True)
         
-    # def training_epoch_end(self, outputs):
+    # def on_train_epoch_end(self, outputs):
     #     # Log and print training metrics at the end of the epoch
     #     train_acc = self.train_metrics["train_acc"].compute()
     #     print(f"Epoch {self.current_epoch}: Train Accuracy: {train_acc:.4f}")
     #     self.train_metrics.reset()
 
-    # def validation_epoch_end(self, outputs):
+    # def on_validation_epoch_end(self, outputs):
     #     # Log and print validation metrics at the end of the epoch
     #     val_acc = self.val_metrics["val_acc"].compute()
     #     print(f"Epoch {self.current_epoch}: Validation Accuracy: {val_acc:.4f}")
     #     self.val_metrics.reset()
 
-    # def test_epoch_end(self, outputs):
+    # def on_test_epoch_end(self, outputs):
     #     # Log and print test metrics at the end of the test epoch
     #     test_acc = self.test_metrics["test_acc"].compute()
     #     print(f"Test Accuracy: {test_acc:.4f}")
-        # self.test_metrics.reset()
+    #     self.test_metrics.reset()
 
     def configure_optimizers(self):
         return self.optimizer

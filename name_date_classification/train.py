@@ -14,7 +14,7 @@ from torchvision.transforms import ToTensor
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import EarlyStopping
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from dataset import createConfusionMatrix, MixtecNameDate
 import mixtec_name_date_year as m
 from pytorch_lightning import Trainer
@@ -60,22 +60,30 @@ def main(args):
     model = m.MixtecNameDateYear(learning_rate=args.learning_rate, num_epoch=args.epochs)
 
     early_stopping = EarlyStopping(monitor="val_loss", patience=3, mode="min", verbose=True)
-    trainer = Trainer(accelerator="auto", logger=logger, max_epochs=args.epochs, callbacks=[early_stopping], log_every_n_steps=10)
+    checkpoint_callback = ModelCheckpoint(
+    dirpath="checkpoints/",
+    save_top_k=1,
+    monitor="val_loss")
+    trainer = Trainer(accelerator="auto", logger=logger, max_epochs=args.epochs, callbacks=[checkpoint_callback, early_stopping, CustomCallback(), LoggingCallback()], log_every_n_steps=10)
 
     trainer.callbacks.append(CustomCallback())
+    print("&&&&&&", trainer.callbacks)
     train_losses, val_losses = [], []
     
-    # Custom hook to log losses per epoch
-    def on_epoch_end(trainer, model):
-        train_loss = trainer.callback_metrics.get("train_loss")
-        val_loss = trainer.callback_metrics.get("val_loss")
-        if train_loss is not None:
-            train_losses.append(train_loss.item())
-        if val_loss is not None:
-            val_losses.append(val_loss.item())
-    
-    
     trainer.fit(model, datamodule=dataset)
+    trainer = pl.Trainer(log_every_n_steps=1)
+    
+     # Custom hook to log losses per epoch
+    # def on_epoch_end(trainer, model):
+    #     train_loss = trainer.callback_metrics.get("train_loss")
+    #     val_loss = trainer.callback_metrics.get("val_loss")
+    #     if train_loss is not None:
+    #         train_losses.append(train_loss.item())
+    #     if val_loss is not None:
+    #         val_losses.append(val_loss.item())
+    
+    print("*****", train_losses)
+    
     trainer.test(model, datamodule=dataset)
 
     # Testing loss
