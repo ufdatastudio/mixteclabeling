@@ -1,5 +1,3 @@
-# train.py
-
 import argparse
 import datetime
 import os
@@ -24,20 +22,30 @@ def _printdate(dt=datetime.datetime.now()):
     hour = f"{dt.hour:02}"
     minute = f"{dt.minute:02}"
     return f"{dt.month}-{dt.day}-{dt.year}-{hour}-{minute}"
+    
 
 class LoggingCallback(pl.Callback):
-    def on_validation_end(self, trainer, pl_module):
+    def __init__(self):
+        self.collection = []
+   
+    def on_train_epoch_end(self, trainer, pl_module):
         metrics = trainer.callback_metrics
+        train_loss = trainer.callback_metrics.get("train_loss")
+        train_acc = trainer.callback_metrics.get("train_acc")
+        print(f"Training metrics after epoch end train_loss : {train_loss} train_acc : {train_acc}")
+        
+    def on_validation_end(self, trainer, pl_module):
+        elogs = trainer.logged_metrics # access it here
+        self.collection.append(elogs)
+        metrics = trainer.callback_metrics
+        val_loss = trainer.callback_metrics.get("val_loss")
+        val_acc = trainer.callback_metrics.get("val_acc")
+        print(f"Validation metrics after epoch end val_loss : {val_loss} val_acc : {val_acc}")
         for k, v in metrics.items():
             pl_module.logger.log_metrics({k: v}, step=trainer.global_step)
             
-class CustomCallback(pl.Callback):
-    def on_epoch_end(self, trainer, pl_module):
-        # Add your custom behavior here
-        print("Epoch ended!")
-        # Example of accessing metrics or logging custom messages:
-        metrics = trainer.callback_metrics
-        print(metrics)
+    def on_test_epoch_end(self, trainer, pl_module):
+        pass
 
 def main(args):
     parser = argparse.ArgumentParser()
@@ -49,7 +57,7 @@ def main(args):
     parser.add_argument("--model", default="vgg16", help="Name of model.")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size.")
     parser.add_argument("--learning_rate", type=float, default=0.01, help="Learning rate.")
-    parser.add_argument("--epochs", type=int, default=10, help="Number of epochs.")
+    parser.add_argument("--epochs", type=int, default=5, help="Number of epochs.")
     args = parser.parse_args(args)
 
     seed_everything(random.randint(0, 100), workers=True)
@@ -60,50 +68,29 @@ def main(args):
     model = m.MixtecNameDateYear(learning_rate=args.learning_rate, num_epoch=args.epochs)
 
     early_stopping = EarlyStopping(monitor="val_loss", patience=3, mode="min", verbose=True)
-    checkpoint_callback = ModelCheckpoint(
-    dirpath="checkpoints/",
-    save_top_k=1,
-    monitor="val_loss")
-    trainer = Trainer(accelerator="auto", logger=logger, max_epochs=args.epochs, callbacks=[checkpoint_callback, early_stopping, CustomCallback(), LoggingCallback()], log_every_n_steps=10)
-
-    trainer.callbacks.append(CustomCallback())
-    print("&&&&&&", trainer.callbacks)
-    train_losses, val_losses = [], []
+    cb = LoggingCallback()
+ 
+    trainer = Trainer(accelerator="auto", logger=pl.loggers.TensorBoardLogger('tb_logs/'), max_epochs=args.epochs, callbacks=[early_stopping, cb], log_every_n_steps=10)
     
     trainer.fit(model, datamodule=dataset)
-    trainer = pl.Trainer(log_every_n_steps=1)
-    
-     # Custom hook to log losses per epoch
-    # def on_epoch_end(trainer, model):
-    #     train_loss = trainer.callback_metrics.get("train_loss")
-    #     val_loss = trainer.callback_metrics.get("val_loss")
-    #     if train_loss is not None:
-    #         train_losses.append(train_loss.item())
-    #     if val_loss is not None:
-    #         val_losses.append(val_loss.item())
-    
-    print("*****", train_losses)
-    
     trainer.test(model, datamodule=dataset)
+    
 
     # Testing loss
     test_loss = trainer.callback_metrics.get("test_loss")
+    test_acc = trainer.callback_metrics.get("test_acc")
     print("Final Test Loss:", test_loss)
-
-    # Plot the training, validation, and test losses
-    plt.figure(figsize=(10, 6))
-    plt.plot(range(len(train_losses)), train_losses, label="Training Loss")
-    plt.plot(range(len(val_losses)), val_losses, label="Validation Loss")
-    if test_loss:
-        plt.axhline(y=test_loss.item(), color="r", linestyle="--", label="Test Loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.title("Training, Validation, and Test Loss")
-    plt.legend()
-    plt.grid(True)
-    plt.savefig("Loss_Curves.png")
-    plt.show()
-
+    print("Final Test Accuracy:", test_acc)
+    
+    # Print plots
+    metrics = cb.collection
+    epochs = range(1, len(metrics))
+    val_loss = []
+    for entry in metrics:
+        val_loss.append(entry['val_loss'].item())
+    val_acc = [entry['val_acc'].item() for entry in metrics]
+    train_loss = [entry.get('train_loss').item() for entry in metrics if 'train_loss' in entry]
+    train_acc = [entry.get('train_acc').item() for entry in metrics if 'train_acc' in entry]
 
 
 if __name__ == "__main__":

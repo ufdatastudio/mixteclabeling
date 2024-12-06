@@ -51,24 +51,18 @@ class MixtecNameDateYear(pl.LightningModule):
         loss = self.loss_fn(preds, y)
         self.train_metrics.update(preds.argmax(dim=1), y)
         self.log("train_loss", loss, on_step=False, on_epoch=True) 
-        
         self.log_dict(self.train_metrics, on_step=False, on_epoch=True)
-        # train_acc = self.train_metrics["train_acc"].compute()
-        # train_prec = self.train_metrics["train_prec"].compute()
-        # train_rec = self.train_metrics["train_rec"].compute()
-        # train_f1 = self.train_metrics["train_f1"].compute()
         
         return loss
 
     def validation_step(self, batch, batch_idx):
         X, y = batch
         preds = self(X)
-        # print(f"preds shape: {preds.shape}, y shape: {y.shape}")
-
         loss = self.loss_fn(preds, y)
         self.val_metrics.update(preds.argmax(dim=1), y)
         self.log("val_loss", loss, on_step=False, on_epoch=True) 
         self.log_dict(self.val_metrics, on_step=False, on_epoch=True)
+        
         return self.loss_fn(preds, y)
 
     def test_step(self, batch, batch_idx):
@@ -79,23 +73,8 @@ class MixtecNameDateYear(pl.LightningModule):
         self.log("test_loss", loss, on_step=False, on_epoch=True)
         self.log_dict(self.test_metrics, on_step=False, on_epoch=True)
         
-    # def on_train_epoch_end(self, outputs):
-    #     # Log and print training metrics at the end of the epoch
-    #     train_acc = self.train_metrics["train_acc"].compute()
-    #     print(f"Epoch {self.current_epoch}: Train Accuracy: {train_acc:.4f}")
-    #     self.train_metrics.reset()
-
-    # def on_validation_epoch_end(self, outputs):
-    #     # Log and print validation metrics at the end of the epoch
-    #     val_acc = self.val_metrics["val_acc"].compute()
-    #     print(f"Epoch {self.current_epoch}: Validation Accuracy: {val_acc:.4f}")
-    #     self.val_metrics.reset()
-
-    # def on_test_epoch_end(self, outputs):
-    #     # Log and print test metrics at the end of the test epoch
-    #     test_acc = self.test_metrics["test_acc"].compute()
-    #     print(f"Test Accuracy: {test_acc:.4f}")
-    #     self.test_metrics.reset()
+        return loss
+        
 
     def configure_optimizers(self):
         return self.optimizer
