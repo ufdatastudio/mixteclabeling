@@ -1,19 +1,23 @@
 name: name-date
 channels:
+  - pytorch # Add pytorch channel for GPU-enabled builds
+  - nvidia # Add nvidia channel for pytorch-cuda
   - conda-forge
   - defaults
 dependencies:
   - python=3.9.10
-  - cudatoolkit
+  # Remove the generic 'cudatoolkit' here, as pytorch-cuda will handle it
   - tqdm
   - numpy
   - matplotlib
   - scikit-learn
   - seaborn
-  - pip
-
-  - pip:
-      - torch
-      - torchvision
-      - torchinfo
-      - requests
+  # Explicitly specify pytorch, torchvision, and the CUDA version
+  # Check the PyTorch website (https://pytorch.org/get-started/locally/) for the exact latest command
+  # for CUDA 12.x and PyTorch 2.7.0+ (or latest stable)
+  - pytorch=2.7.1 # Or the latest stable version that supports sm_100
+  - torchvision=0.20.1 # Match torchvision version with pytorch
+  - pytorch-cuda=12.1 # Or the latest CUDA version that supports sm_100 (e.g., 12.8 if available on conda)
+  - torchinfo
+  - requests
+  - pip # Keep pip for any other pip-only packages
